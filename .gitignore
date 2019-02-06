@@ -1,0 +1,9 @@
+.*
+!.gitignore
+
+tmp/
+out/
+
+*.elf
+*.img
+*.o
