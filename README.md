@@ -1,7 +1,7 @@
 forth386
 ========
 
-A Forth for i386 machines. Boots via Multiboot 2. Assumes a PS/2 keyboard.
+A bare-metal Forth for i386 machines. Boots via Multiboot 2. Assumes a PS/2 keyboard.
 
 Note that this does not precisely follow the ANS Forth standard.
 
