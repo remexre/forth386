@@ -1,13 +1,16 @@
+NASMFLAGS += -g
 QEMUFLAGS += -d cpu_reset -d guest_errors -d int
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
+UNITS = console_high console_low forth multiboot2 start
+
 all: out/forth386.elf out/forth386.img
 clean:
 	rm -rf tmp out
-run-qemu: out/forth386.img
+run: out/forth386.img
 	qemu-system-i386 -drive format=raw,file=out/forth386.img $(QEMUFLAGS)
-.PHONY: all clean run-qemu
+.PHONY: all clean run
 
 out/forth386.img: out/forth386.elf src/grub.cfg
 	@grub-file --is-x86-multiboot2 out/forth386.elf
@@ -17,10 +20,10 @@ out/forth386.img: out/forth386.elf src/grub.cfg
 	@mkdir -p out
 	grub-mkrescue -o $@ .isodir
 
-out/forth386.elf: src/linker.ld tmp/console.o tmp/forth.o tmp/multiboot2.o tmp/start.o
+out/forth386.elf: src/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
 	@mkdir -p out
 	ld -m elf_i386 -o $@ -T $^ -n -z max-page-size=0x1000
 
 tmp/%.o: src/%.asm
 	@mkdir -p tmp
-	nasm -felf -o $@ $<
+	nasm -felf -o $@ $< $(NASMFLAGS)

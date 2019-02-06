@@ -1,5 +1,8 @@
 bits 32
 extern console_init
+extern console_print_number
+extern console_print_newline
+extern console_refresh
 
 [section .text]
 
@@ -12,6 +15,13 @@ start:
 	mov ebp, return_stack_top
 
 	call console_init
+
+	mov eax, 12345
+	call console_print_number
+	call console_print_newline
+	mov eax, 42
+	call console_print_number
+	call console_refresh
 
 ; Halts the CPU.
 halt:

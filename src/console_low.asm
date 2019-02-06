@@ -2,8 +2,6 @@ bits 32
 
 [section .text]
 
-console_base equ 0xb8000
-
 ; Initializes the console. Trashes eax, ecx, edx, esi, edi.
 global console_init
 console_init:
@@ -32,12 +30,13 @@ console_init:
 ; Draws the console to the screen and updates the cursor. Trashes ebx, ecx, edx, edi.
 global console_refresh
 console_refresh:
+	inc byte [console.status]
 	push eax
 	push esi
 
 	; Draw the console.
 	mov ecx, 80*25
-	mov esi, buf
+	mov esi, console
 	mov edi, 0xb8000
 	mov bh, [color]
 .loop:
@@ -69,14 +68,15 @@ console_refresh:
 
 [section .data]
 
-global buf
-buf:
+global console
+console:
 	db "Welcome to Forth386!"
 .welcome_end:
-	times (80*25 - ($ - buf)) db 0x20
+	times (80*25 - ($ - console) - 1) db 0x20
+.status: db '0'
 
 global cursor
-cursor: dw buf.welcome_end - buf
+cursor: dw console.welcome_end - console
 
 global color
 color: db 0xf0
