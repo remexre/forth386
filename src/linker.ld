@@ -6,10 +6,12 @@ SECTIONS {
 	.loader : {
 		KEEP(*(.multiboot2_header))
 	}
-	.text : {
+	.forth386 : {
 		*(.text)
 		*(.forthk)
 		*(.forthl)
+		*(.data)
+		*(.rodata)
 	}
 
 	. = 2M;

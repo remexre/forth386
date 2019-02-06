@@ -17,7 +17,7 @@ out/forth386.img: out/forth386.elf src/grub.cfg
 	@mkdir -p out
 	grub-mkrescue -o $@ .isodir
 
-out/forth386.elf: src/linker.ld tmp/forth.o tmp/multiboot2.o tmp/start.o
+out/forth386.elf: src/linker.ld tmp/console.o tmp/forth.o tmp/multiboot2.o tmp/start.o
 	@mkdir -p out
 	ld -m elf_i386 -o $@ -T $^ -n -z max-page-size=0x1000
 

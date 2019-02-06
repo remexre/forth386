@@ -1,4 +1,4 @@
-section .multiboot2_header
+[section .multiboot2_header]
 
 multiboot2_magic equ 0xe85250d6
 

@@ -1,13 +1,17 @@
 bits 32
+extern console_init
 
-section .text
+[section .text]
 
 ; The entry point to the kernel.
-extern start
+global start
 start:
-	std ; So lodsd increments esi.
-	mov esp, stack
-	mov word [0xb8000], 0x4f21
+	cld ; So lodsd increments esi.
+
+	mov esp, param_stack_top
+	mov ebp, return_stack_top
+
+	call console_init
 
 ; Halts the CPU.
 halt:
@@ -15,6 +19,16 @@ halt:
 	hlt
 	jmp halt
 
-section .bss
+foo: db "Hello, world!"
 
-stack: resb 1024 * 1024
+[section .bss]
+
+bss_start:
+
+param_stack: resd 64
+param_stack_top:
+
+return_stack: resd 64
+return_stack_top:
+
+heap: resb $-bss_start

@@ -1,4 +1,4 @@
-section .forthk
+[section .forthk]
 
 ; We choose to use:
 ;
@@ -46,7 +46,7 @@ docon:
 	jmp eax
 docon_len equ $ - docon
 
-section .forthl
+[section .forthl]
 
 forth_fetch: ; ( a-addr -- x )
 .cfa:
