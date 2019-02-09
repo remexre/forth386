@@ -15,3 +15,5 @@ down:
 
 ; Padding
 times (256-($-$$)) db 0x0a
+
+; vi: cc=80 ft=nasm

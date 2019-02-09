@@ -27,7 +27,8 @@ console_init:
 
 	jmp console_refresh ; Tail-call.
 
-; Draws the console to the screen and updates the cursor. Trashes ebx, ecx, edx, edi.
+; Draws the console to the screen and updates the cursor. Trashes ebx, ecx,
+; edx, edi.
 global console_refresh
 console_refresh:
 	push eax
@@ -77,3 +78,5 @@ cursor: dw 80
 
 global color
 color: db 0x70
+
+; vi: cc=80 ft=nasm

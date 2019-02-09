@@ -6,6 +6,18 @@ extern cursor
 
 [section .text]
 
+; Prints the character in al to the console. Trashes edx.
+global console_print_char
+console_print_char:
+	xor edx, edx
+	mov dx, [cursor]
+	mov [console+edx], al
+	inc dx
+	mov [cursor], dx
+	cmp dx, 80*25
+	je console_scroll
+	ret
+
 ; Prints the number in eax to the console. Trashes eax, ebx, ecx, edx, edi.
 global console_print_number
 console_print_number:
@@ -97,8 +109,8 @@ console_print_newline:
 	jae console_scroll
 	ret
 
-; Scrolls the console. Preserves all registers, and moves the cursor to the first row of the last
-; line.
+; Scrolls the console. Preserves all registers, and moves the cursor to the
+; first row of the last line.
 console_scroll:
 	push eax
 	push ecx
@@ -134,3 +146,5 @@ numbuf:
 space:
 .len: dd 1
 .str: db ' '
+
+; vi: cc=80 ft=nasm

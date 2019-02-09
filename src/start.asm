@@ -34,3 +34,5 @@ param_stack_top:
 
 return_stack: resd 64
 return_stack_top:
+
+; vi: cc=80 ft=nasm

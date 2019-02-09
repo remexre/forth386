@@ -1,9 +1,11 @@
 bits 32
 
+extern console_print_char
 extern console_print_newline
 extern console_print_number
 extern console_print_string
 extern console_refresh
+extern get_keycode
 
 [section .text]
 
@@ -13,8 +15,9 @@ repl:
 	sti
 
 .loop:
-	hlt
-
+	call get_keycode
+	call console_print_char
+	call console_refresh
 	jmp .loop
 
 ; The handler for the Pause/Break key. When that key is pressed, this function
@@ -27,17 +30,11 @@ brk:
 	call console_refresh
 	jmp repl.loop
 
-[section .data]
-
-global scancode_buf.bytes
-global scancode_buf.cursor
-scancode_buf:
-.bytes: times 16 db 0
-.cursor: db 0
-
 [section .rodata]
 
 brk_msg:
 .len: dd .end - .str
 .str: db "User pressed Break!"
 .end:
+
+; vi: cc=80 ft=nasm

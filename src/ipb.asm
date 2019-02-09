@@ -1,3 +1,4 @@
+extern brk
 extern console
 extern cursor
 extern color
@@ -14,3 +15,6 @@ ipb:
 	dd cursor
 	dd color
 	dd idt
+	dd brk
+
+; vi: cc=80 ft=nasm

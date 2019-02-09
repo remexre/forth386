@@ -2,6 +2,8 @@ bits 32
 
 extern brk
 extern idt_set
+extern scancode_buf.bytes
+extern scancode_buf.wrcursor
 
 [section .text]
 
@@ -36,15 +38,23 @@ ps2_irq:
 	mov dx, 0x60
 	xor eax, eax
 	in al, dx
-	mov al, [keymap+eax]
-	mov [0xb8000], al
+
+	xor edx, edx
+	mov dl, [scancode_buf.wrcursor]
+	mov [scancode_buf.bytes+edx], al
+	inc dl
+	and dl, 0x1f
+	mov [scancode_buf.wrcursor], dl
+
+	mov dx, 0x64
+	in al, dx
+	test al, 0x01
+	jnz ps2_irq
+
 	mov dx, 0x20
 	mov al, 0x20
 	out dx, al
-	mov dword [esp], brk
+
 	iret
 
-[section .rodata]
-
-keymap:
-incbin "tmp/keymap.bin"
+; vi: cc=80 ft=nasm

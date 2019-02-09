@@ -16,3 +16,5 @@ multiboot2_tags:
 		dd 8 ; Size = 8
 
 multiboot2_len EQU $ - multiboot2_header
+
+; vi: cc=80 ft=nasm

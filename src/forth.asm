@@ -73,3 +73,5 @@ forth_store: ; ( x a-addr -- )
 	pop eax
 	mov [ecx], eax
 	NEXT
+
+; vi: cc=80 ft=nasm

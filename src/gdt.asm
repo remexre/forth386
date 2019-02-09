@@ -39,3 +39,5 @@ gdt:
 .code: gdt_entry 0, 0xfffff, 0x9a
 .data: gdt_entry 0, 0xfffff, 0x92
 gdt_len equ ($ - gdt)
+
+; vi: cc=80 ft=nasm
