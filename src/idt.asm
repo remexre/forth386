@@ -59,5 +59,6 @@ idtr:
 	dw (%1 >> 16)
 %endmacro
 
+global idt
 idt: times 48 dq 0
 .end:

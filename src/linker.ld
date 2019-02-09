@@ -13,9 +13,15 @@ SECTIONS {
 		*(.data)
 		*(.rodata)
 	}
-
-	. = 2M;
 	.bss : {
 		*(.bss)
 	}
+
+	. = 0x102030;
+	.ipb : {
+		/* The "Important Pointer Block" */
+		KEEP(*(.data.ipb))
+	}
+
+	top = .;
 }

@@ -3,7 +3,7 @@ QEMUFLAGS += -d cpu_reset -d guest_errors -d int
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
-UNITS = console_high console_low forth gdt idt multiboot2 ps2 repl start
+UNITS = console_high console_low forth gdt ipb idt multiboot2 ps2 repl start
 
 all: out/forth386.elf out/forth386.img
 clean:
@@ -20,7 +20,14 @@ out/forth386.img: out/forth386.elf src/grub.cfg
 	@mkdir -p out
 	grub-mkrescue -o $@ .isodir
 
-out/forth386.elf: src/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
+out/forth386.elf out/forth386.sym: out/forth386-unstripped.elf
+	@mkdir -p out
+	cp out/forth386-unstripped.elf out/forth386.elf
+	cp out/forth386-unstripped.elf out/forth386.sym
+	strip --only-keep-debug out/forth386.sym
+	strip --strip-debug out/forth386.elf
+
+out/forth386-unstripped.elf: src/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
 	@mkdir -p out
 	ld -m elf_i386 -o $@ -T $^ -n -z max-page-size=0x1000
 

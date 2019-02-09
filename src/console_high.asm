@@ -49,16 +49,16 @@ console_print_number:
 ; edx, edi.
 global console_print_string
 console_print_string:
-	xor edx, edx
-	mov dx, [cursor]
 	mov ecx, [eax]
 	test ecx, ecx
 	jz .end
+	xor edx, edx
 	xor edi, edi
 
 .loop:
+	mov dx, [cursor]
 	test cx, cx
-	jz .end
+	jz .loop_end
 	dec cx
 	mov bl, [eax+4+edi]
 	mov [console+edx], bl
@@ -66,24 +66,12 @@ console_print_string:
 	inc dx
 	cmp dx, 80*25
 	jne .loop
+	push .loop
+	jmp console_scroll
+.loop_end:
 
-	push esi
-	push edi
-	push ecx
-
-	sub dx, 80
-	mov ecx, 80*24
-	mov esi, console+80
-	mov edi, console
-	rep movsb
-
-	pop ecx
-	pop edi
-	pop esi
-	jmp .loop
-
-.end:
 	mov [cursor], dx
+.end:
 	ret
 
 ; Prints a space to the console. Trashes eax, ebx, ecx, edx, edi.
@@ -104,18 +92,34 @@ console_print_newline:
 	add ax, cx
 	cmp ax, 80*25
 	jl .skip_scroll
-
-	sub ax, cx
-	push esi
-	mov ecx, 80*24
-	mov esi, console+80
-	mov edi, console
-	rep movsb
-	; TODO Clear last line
-	pop esi
-
+	call console_scroll
 .skip_scroll:
 	mov [cursor], ax
+	ret
+
+; Scrolls the console. Preserves all registers, and moves the cursor to the first row of the last
+; line.
+console_scroll:
+	push eax
+	push ecx
+	push esi
+	push edi
+
+	mov esi, console+80
+	mov edi, console
+	mov ecx, 80*24
+	rep movsb
+
+	mov ecx, 80
+	mov al, ' '
+	rep stosb
+
+	mov word [cursor], 80*24
+
+	pop edi
+	pop esi
+	pop ecx
+	pop eax
 	ret
 
 [section .data]

@@ -4,6 +4,8 @@ extern console_init
 extern gdt_init
 extern idt_init
 extern ps2_init
+
+extern ipb
 extern repl
 
 [section .text]
@@ -11,6 +13,8 @@ extern repl
 ; The entry point to the kernel.
 global start
 start:
+	mov [ipb+4], ebx
+
 	cld ; So lodsd increments esi.
 
 	mov esp, param_stack_top
@@ -25,12 +29,8 @@ start:
 
 [section .bss]
 
-bss_start:
-
 param_stack: resd 64
 param_stack_top:
 
 return_stack: resd 64
 return_stack_top:
-
-heap: resb $-bss_start

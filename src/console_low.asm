@@ -76,4 +76,4 @@ global cursor
 cursor: dw 80
 
 global color
-color: db 0xf0
+color: db 0x70
