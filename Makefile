@@ -3,7 +3,7 @@ QEMUFLAGS += -d cpu_reset -d guest_errors -d int
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
-UNITS = console_high console_low forth multiboot2 start
+UNITS = console_high console_low forth gdt idt multiboot2 ps2 repl start
 
 all: out/forth386.elf out/forth386.img
 clean:
@@ -27,3 +27,7 @@ out/forth386.elf: src/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
 tmp/%.o: src/%.asm
 	@mkdir -p tmp
 	nasm -felf -o $@ $< $(NASMFLAGS)
+tmp/ps2.o: tmp/keymap.bin
+
+tmp/keymap.bin: src/keymap_qwerty.asm
+	nasm -fbin -o $@ $<

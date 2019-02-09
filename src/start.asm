@@ -1,8 +1,10 @@
 bits 32
+
 extern console_init
-extern console_print_number
-extern console_print_newline
-extern console_refresh
+extern gdt_init
+extern idt_init
+extern ps2_init
+extern repl
 
 [section .text]
 
@@ -14,22 +16,12 @@ start:
 	mov esp, param_stack_top
 	mov ebp, return_stack_top
 
+	call gdt_init
+	call idt_init
 	call console_init
+	call ps2_init
 
-	mov eax, 12345
-	call console_print_number
-	call console_print_newline
-	mov eax, 42
-	call console_print_number
-	call console_refresh
-
-; Halts the CPU.
-halt:
-	cli
-	hlt
-	jmp halt
-
-foo: db "Hello, world!"
+	jmp repl
 
 [section .bss]
 

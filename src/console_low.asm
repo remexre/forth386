@@ -30,7 +30,6 @@ console_init:
 ; Draws the console to the screen and updates the cursor. Trashes ebx, ecx, edx, edi.
 global console_refresh
 console_refresh:
-	inc byte [console.status]
 	push eax
 	push esi
 
@@ -71,12 +70,10 @@ console_refresh:
 global console
 console:
 	db "Welcome to Forth386!"
-.welcome_end:
-	times (80*25 - ($ - console) - 1) db 0x20
-.status: db '0'
+	times (80*25 - ($ - console)) db 0x20
 
 global cursor
-cursor: dw console.welcome_end - console
+cursor: dw 80
 
 global color
 color: db 0xf0

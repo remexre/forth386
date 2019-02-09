@@ -34,7 +34,6 @@ console_print_number:
 	mov eax, numbuf.len
 
 	; Move up the thing we just printed.
-dbg:
 	mov ecx, numbuf_cap
 	sub ecx, [numbuf.len]
 	lea esi, [numbuf.str+ecx]
@@ -50,17 +49,23 @@ dbg:
 ; edx, edi.
 global console_print_string
 console_print_string:
-	mov ecx, [eax]
 	xor edx, edx
-	xor edi, edi
 	mov dx, [cursor]
+	mov ecx, [eax]
+	test ecx, ecx
+	jz .end
+	xor edi, edi
 
 .loop:
+	test cx, cx
+	jz .end
+	dec cx
 	mov bl, [eax+4+edi]
 	mov [console+edx], bl
+	inc edi
 	inc dx
 	cmp dx, 80*25
-	jne .skip_scroll
+	jne .loop
 
 	push esi
 	push edi
@@ -75,11 +80,9 @@ console_print_string:
 	pop ecx
 	pop edi
 	pop esi
+	jmp .loop
 
-.skip_scroll:
-	inc edi
-	loop .loop
-
+.end:
 	mov [cursor], dx
 	ret
 
@@ -102,11 +105,13 @@ console_print_newline:
 	cmp ax, 80*25
 	jl .skip_scroll
 
+	sub ax, cx
 	push esi
 	mov ecx, 80*24
 	mov esi, console+80
 	mov edi, console
 	rep movsb
+	; TODO Clear last line
 	pop esi
 
 .skip_scroll:
