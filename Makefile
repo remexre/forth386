@@ -1,5 +1,6 @@
 NASMFLAGS += -g
-QEMUFLAGS += -d cpu_reset -d guest_errors -d int
+# QEMUFLAGS += -d cpu_reset -d guest_errors -d int
+QEMUFLAGS += -d guest_errors
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 

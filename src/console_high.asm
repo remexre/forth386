@@ -83,7 +83,7 @@ console_print_space:
 ; Prints a newline to the console. Trashes eax, ecx, edi.
 global console_print_newline
 console_print_newline:
-	mov cx, 80
+	mov cl, 80
 	xor eax, eax
 	mov ax, [cursor]
 	div cl
@@ -91,7 +91,7 @@ console_print_newline:
 	inc al
 
 	lea eax, [eax+eax*4]
-	shr ax, 4
+	shl ax, 4
 	mov [cursor], ax
 	cmp ax, 80*25
 	jae console_scroll

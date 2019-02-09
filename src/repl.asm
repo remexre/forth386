@@ -22,7 +22,7 @@ repl:
 global brk
 brk:
 	mov eax, brk_msg
-	; call console_print_string
+	call console_print_string
 	call console_print_newline
 	call console_refresh
 	jmp repl.loop
