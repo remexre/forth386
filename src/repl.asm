@@ -21,18 +21,13 @@ repl:
 ; is jumped to.
 global brk
 brk:
-	inc dword [num]
-	mov eax, [num]
-	call console_print_number
 	mov eax, brk_msg
-	call console_print_string
+	; call console_print_string
 	call console_print_newline
 	call console_refresh
 	jmp repl.loop
 
 [section .data]
-
-num: dd 0
 
 global scancode_buf.bytes
 global scancode_buf.cursor

@@ -69,8 +69,9 @@ console_refresh:
 
 global console
 console:
-	db "Welcome to Forth386!"
-	times (80*25 - ($ - console)) db 0x20
+	; db "Welcome to Forth386!"
+	; times (80*25 - ($ - console)) db 0x20
+	times 200 db "0123456789"
 
 global cursor
 cursor: dw 80
