@@ -9,7 +9,6 @@
 ; Bits 3-0:    Column of the keyboard, 0 is left-most
 
 %macro define_keycode 3
-
 %if %2 > 7
 %error "arg 2 to define_keycode out of bounds"
 %endif
@@ -18,13 +17,13 @@
 %error "arg 3 to define_keycode out of bounds"
 %endif
 
-key_%[%1]_down equ              (%2 << 4) | %3
-key_%[%1]_up   equ 0b10000000 | (%2 << 4) | %3
+key_%[%1]_down equ             (%2 << 4) | %3
+key_%[%1]_up   equ 10000000b | (%2 << 4) | %3
 %endmacro
 
 ; Fn key (doesn't exist)
 define_keycode l_ctrl,  0,  1
-; TODO: Left Super/Win
+define_keycode l_super, 0,  2
 define_keycode l_alt,   0,  3
 define_keycode space,   0,  4
 define_keycode r_alt,   0,  5

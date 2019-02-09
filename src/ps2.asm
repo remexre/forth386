@@ -2,8 +2,8 @@ bits 32
 
 extern brk
 extern idt_set
-extern scancode_buf.bytes
-extern scancode_buf.wrcursor
+extern keycode
+extern scancode_set_1
 
 [section .text]
 
@@ -18,7 +18,7 @@ ps2_init:
 	; Reenable IRQ1
 	mov dx, 0x21
 	in al, dx
-	and al, 0b11111101
+	and al, 11111101b
 	out dx, al
 
 	ret
@@ -33,28 +33,30 @@ wait_until_input_buffer_empty:
 	ret
 
 ; The handler for the keyboard IRQ.
-global ps2_irq
 ps2_irq:
-	mov dx, 0x60
-	xor eax, eax
-	in al, dx
-
-	xor edx, edx
-	mov dl, [scancode_buf.wrcursor]
-	mov [scancode_buf.bytes+edx], al
-	inc dl
-	and dl, 0x1f
-	mov [scancode_buf.wrcursor], dl
-
+.loop:
 	mov dx, 0x64
 	in al, dx
-	test al, 0x01
-	jnz ps2_irq
 
+	test al, 1
+	jz .end
+
+	mov dx, 0x60
+	in al, dx
+
+	call scancode_set_1
+	mov ah, al
+	and ah, 0x7f
+	cmp ah, 0x7f
+	je .loop
+
+	mov ah, 0x01
+	mov [keycode], ax
+
+.end:
 	mov dx, 0x20
 	mov al, 0x20
 	out dx, al
-
 	iret
 
 ; vi: cc=80 ft=nasm

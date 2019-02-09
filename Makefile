@@ -4,7 +4,7 @@ QEMUFLAGS += -d guest_errors
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
-UNITS  = console_high console_low forth gdt kbd ipb idt multiboot2 ps2 repl
+UNITS  = console_high console_low debug_port forth gdt kbd ipb idt multiboot2 ps2 repl
 UNITS += scancode_set_1 start
 
 all: out/forth386.elf out/forth386.img

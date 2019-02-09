@@ -9,9 +9,15 @@ extern get_keycode
 
 [section .text]
 
+strs.start_repl: db "Start of REPL", 10, 0
+
 ; The main loop of the REPL.
 global repl
 repl:
+	mov eax, strs.start_repl
+extern debug_port_write_string
+	call debug_port_write_string
+
 	sti
 
 .loop:

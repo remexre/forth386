@@ -33,6 +33,11 @@ scancode_set_1:
 	mov [state], cl
 	ret
 
+.todo:
+	mov byte [state], 0x00
+	mov al, 0x7f
+	ret
+
 [section .data]
 
 state: db 0
@@ -42,8 +47,8 @@ buf: times 6 db 0
 
 state_jumps:
 	dd scancode_set_1.state0
-	dd scancode_set_1.state0
-	dd scancode_set_1.state0
+	dd scancode_set_1.todo
+	dd scancode_set_1.todo
 
 state0_jumps:
 	db invalid_scancode, key_esc_down,     key_1_down,       key_2_down
@@ -135,5 +140,8 @@ state0_jumps:
 	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
 	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
 	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+%if ($-state0_jumps) != 256
+%error "Bad State0 jump table"
+%endif
 
 ; vi: cc=80 ft=nasm
