@@ -1,5 +1,7 @@
 bits 32
 
+%include "src/debug.inc"
+
 [section .text]
 
 %define pic1_cmd  0x20
@@ -32,6 +34,17 @@ idt_init:
 	write pic2_data, 0x01 ; 8086 Mode
 	write pic2_data, 0xff ; Disable all IRQs
 
+	; Set a few exception handlers.
+	mov eax, 6 ; Invalid Opcode
+	mov ecx, ud_handler
+	call idt_set
+	mov eax, 13 ; General Protection Fault
+	mov ecx, gp_handler
+	call idt_set
+	mov eax, 14 ; Page Fault
+	mov ecx, pf_handler
+	call idt_set
+
 	; Set up the IDT.
 	lidt [idtr]
 	ret
@@ -47,19 +60,31 @@ idt_set:
 	mov word [idt+6+eax*8], cx
 	ret
 
+; The Invalid Opcode handler.
+ud_handler:
+	debug "Invalid Opcode!"
+	jmp halt
+
+; The General Protection Fault handler.
+gp_handler:
+	debug "General Protection Fault!"
+	jmp halt
+
+; The Page Fault handler.
+pf_handler:
+	debug "Page Fault!"
+	jmp halt
+
+halt:
+	cli
+	hlt
+	jmp halt
+
 [section .data]
 
 idtr:
 .size:   dw idt.end - idt - 1
 .offset: dd idt
-
-%macro idt_entry 3 ; offset, selector, type and attrs
-	dw (%1 & 0xffff)
-	dw %2
-	db 0
-	db %3
-	dw (%1 >> 16)
-%endmacro
 
 global idt
 idt: times 48 dq 0

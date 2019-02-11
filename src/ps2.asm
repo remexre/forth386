@@ -1,5 +1,7 @@
 bits 32
 
+%include "src/debug.inc"
+
 extern brk
 extern idt_set
 extern keycode
@@ -23,18 +25,11 @@ ps2_init:
 
 	ret
 
-; Busy-waits until we can write a command byte.
-wait_until_input_buffer_empty:
-	pause ; Can't hurt /shrug
-	mov dx, 0x60
-	in al, dx
-	test al, 0x02
-	jnz wait_until_input_buffer_empty
-	ret
-
 ; The handler for the keyboard IRQ.
 ps2_irq:
 .loop:
+	debug "[IRQ ] entered"
+
 	mov dx, 0x64
 	in al, dx
 
@@ -57,6 +52,8 @@ ps2_irq:
 	mov dx, 0x20
 	mov al, 0x20
 	out dx, al
+
+	debug "[IRQ ] leaving"
 	iret
 
 ; vi: cc=80 ft=nasm

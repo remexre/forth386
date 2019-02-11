@@ -1,5 +1,7 @@
 bits 32
 
+%include "src/debug.inc"
+
 extern console_print_char
 extern console_print_newline
 extern console_print_number
@@ -21,8 +23,11 @@ extern debug_port_write_string
 	sti
 
 .loop:
+	debug "[repl] starting loop"
 	call get_keycode
+	debug "[repl] got char"
 	call console_print_char
+	debug "[repl] about to refresh"
 	call console_refresh
 	jmp .loop
 

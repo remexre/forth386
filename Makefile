@@ -1,6 +1,6 @@
 NASMFLAGS += -g
 # QEMUFLAGS += -d cpu_reset -d guest_errors -d int
-QEMUFLAGS += -d guest_errors
+QEMUFLAGS += -d int
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
@@ -10,13 +10,13 @@ UNITS += scancode_set_1 start
 all: out/forth386.elf out/forth386.img
 clean:
 	rm -rf tmp out
-debug-client: out/forth386.sym
-	gdb -ex 'target remote localhost:1234' -ex 'symbol-file out/forth386.sym'
-debug-server: out/forth386.img
-	qemu-system-i386 -drive format=raw,file=out/forth386.img $(QEMUFLAGS) -s -S
+debug: out/forth386.img out/forth386.sym
+	gdb -x src/script.gdb
 run: out/forth386.img
 	qemu-system-i386 -drive format=raw,file=out/forth386.img $(QEMUFLAGS)
-.PHONY: all clean debug-client debug-server run
+watch:
+	watchexec -cre asm,cfg,inc,ld make
+.PHONY: all clean debug-client debug-server run watch
 
 out/forth386.img: out/forth386.elf src/grub.cfg
 	@grub-file --is-x86-multiboot2 out/forth386.elf
