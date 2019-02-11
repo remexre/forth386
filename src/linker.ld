@@ -20,7 +20,7 @@ SECTIONS {
 	. = 0x102030;
 	.ipb : {
 		/* The "Important Pointer Block" */
-		KEEP(*(.data.ipb))
+		KEEP(*(.ipb))
 	}
 
 	top = .;

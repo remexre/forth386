@@ -4,7 +4,7 @@ extern cursor
 extern color
 extern idt
 
-[section .data.ipb]
+[section .ipb]
 
 ; The Important Pointer Block.
 global ipb

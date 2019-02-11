@@ -19,8 +19,9 @@ scancode_set_1:
 	mov ecx, [state_jumps+ecx*4]
 	jmp ecx
 
-	; We use a table to determine which key to use, since keys are extremely
-	; dense here.
+	; This is the entry state, where a key is beginning to be recognized. We
+	; use a table to determine which key to use, since keys are extremely dense
+	; here.
 .state0:
 	and eax, 0xff
 	mov cl, al
@@ -33,6 +34,14 @@ scancode_set_1:
 	inc cl
 	mov [state], cl
 	ret
+
+	; This is the state after reading 0xe0.
+.state1:
+	jmp .todo
+
+	; This is the state after reading 0xe1.
+.state2:
+	jmp .todo
 
 .todo:
 	mov byte [state], 0x00
@@ -48,8 +57,8 @@ buf: times 6 db 0
 
 state_jumps:
 	dd scancode_set_1.state0
-	dd scancode_set_1.todo
-	dd scancode_set_1.todo
+	dd scancode_set_1.state1
+	dd scancode_set_1.state2
 
 state0_jumps:
 	db invalid_scancode, key_esc_down,     key_1_down,       key_2_down
