@@ -35,6 +35,9 @@ idt_init:
 	write pic2_data, 0xff ; Disable all IRQs
 
 	; Set a few exception handlers.
+	mov eax, 3 ; Breakpoint
+	mov ecx, bp_handler
+	call idt_set
 	mov eax, 6 ; Invalid Opcode
 	mov ecx, ud_handler
 	call idt_set
@@ -59,6 +62,11 @@ idt_set:
 	shr ecx, 16
 	mov word [idt+6+eax*8], cx
 	ret
+
+; The Breakpoint handler.
+bp_handler:
+	debug "Breakpoint!"
+	iret
 
 ; The Invalid Opcode handler.
 ud_handler:

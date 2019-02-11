@@ -28,7 +28,7 @@ ps2_init:
 ; The handler for the keyboard IRQ.
 ps2_irq:
 .loop:
-	debug "[IRQ ] entered"
+	pushad
 
 	mov dx, 0x64
 	in al, dx
@@ -39,7 +39,9 @@ ps2_irq:
 	mov dx, 0x60
 	in al, dx
 
+	push ecx
 	call scancode_set_1
+	pop ecx
 	mov ah, al
 	and ah, 0x7f
 	cmp ah, 0x7f
@@ -53,7 +55,7 @@ ps2_irq:
 	mov al, 0x20
 	out dx, al
 
-	debug "[IRQ ] leaving"
+	popad
 	iret
 
 ; vi: cc=80 ft=nasm

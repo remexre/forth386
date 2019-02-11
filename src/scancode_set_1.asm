@@ -13,7 +13,6 @@ more_input        equ 0xff
 ; invalid, or 0xff if more input is required. Trashes eax, ecx.
 global scancode_set_1
 scancode_set_1:
-	debug "[scan] entered"
 	; We use a jump table to choose which state to enter.
 	xor ecx, ecx
 	mov cl, [state]
@@ -28,19 +27,16 @@ scancode_set_1:
 	mov al, [state0_jumps+eax]
 	cmp al, more_input
 	je .state0_more_input
-	debug "[scan] leaving state0 normally"
 	ret
 .state0_more_input:
 	and cl, 1
 	inc cl
-	; mov [state], cl
-	debug "[scan] leaving state0 more_input"
+	mov [state], cl
 	ret
 
 .todo:
 	mov byte [state], 0x00
 	mov al, 0x7f
-	debug "[scan] leaving state_todo more_input"
 	ret
 
 [section .data]

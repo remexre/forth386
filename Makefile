@@ -12,11 +12,13 @@ clean:
 	rm -rf tmp out
 debug: out/forth386.img out/forth386.sym
 	gdb -x src/script.gdb
+disas: out/forth386-unstripped.elf
+	objdump -M intel -d $< | less
 run: out/forth386.img
 	qemu-system-i386 -drive format=raw,file=out/forth386.img $(QEMUFLAGS)
 watch:
 	watchexec -cre asm,cfg,inc,ld make
-.PHONY: all clean debug-client debug-server run watch
+.PHONY: all clean debug disas run watch
 
 out/forth386.img: out/forth386.elf src/grub.cfg
 	@grub-file --is-x86-multiboot2 out/forth386.elf
