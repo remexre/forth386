@@ -1,6 +1,6 @@
 bits 32
 
-%include "src/debug.inc"
+extern keycode_to_ascii
 
 [section .text]
 
@@ -8,17 +8,21 @@ bits 32
 global get_ascii
 get_ascii:
 	call update_kbd_state
-	test al, al
+	test al, 0x80
 	jnz get_ascii
 
-	mov al, [kbd_state]
-	debug_8bit "get_ascii", al
+	call keycode_to_ascii
+	test al, al
+	jz get_ascii
+
 	ret
 
-; Gets an ASCII key and updates the kbd_state. Returns whether the key was a
-; press (0) or a release (1) in al. Trashes eax, ebx, ecx.
+; Gets an ASCII key and updates the kbd_state. Returns the keycode that caused
+; the change in al. Trashes eax, ebx, ecx.
 update_kbd_state:
 	call get_keycode
+
+	mov ah, al
 
 	; ch = down
 	; down = (n >> 7) != 0;
@@ -49,7 +53,7 @@ update_kbd_state:
 	shl ch, cl
 	or al, ch
 	mov [kbd_state+ebx], al
-	mov al, 0
+	mov al, ah
 	ret
 .else:
 	mov ch, 1
@@ -57,7 +61,7 @@ update_kbd_state:
 	not ch
 	and al, ch
 	mov [kbd_state+ebx], al
-	mov al, 1
+	mov al, ah
 	ret
 
 ; Gets a keycode from the keyboard, returning it in al. If an invalid scancode
@@ -75,7 +79,6 @@ get_keycode:
 	test ah, ah
 	jz .halt
 	sti
-	debug_8bit "get_keycode", al
 	ret
 
 [section .data]
@@ -84,6 +87,7 @@ global keycode
 keycode: dw 0
 
 ; Bitmap of keys, where 1 = down, 0 = up.
+global kbd_state
 kbd_state: times 16 db 0
 
 ; vi: cc=80 ft=nasm
