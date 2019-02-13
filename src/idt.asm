@@ -41,6 +41,9 @@ idt_init:
 	mov eax, 6 ; Invalid Opcode
 	mov ecx, ud_handler
 	call idt_set
+	mov eax, 8 ; Double Fault
+	mov ecx, df_handler
+	call idt_set
 	mov eax, 13 ; General Protection Fault
 	mov ecx, gp_handler
 	call idt_set
@@ -71,6 +74,11 @@ bp_handler:
 ; The Invalid Opcode handler.
 ud_handler:
 	debug "Invalid Opcode!"
+	jmp halt
+
+; The Double Fault handler.
+df_handler:
+	debug "Double Fault!"
 	jmp halt
 
 ; The General Protection Fault handler.

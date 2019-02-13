@@ -4,7 +4,7 @@
 ;
 ; The layout is generally:
 ;
-; Bit 7 (MSB): 0 if key down, 1 if key up
+; Bit 7 (MSB): 0 if key up, 1 if key down
 ; Bits 6-4:    Row of the keyboard, 0 is bottom-most
 ; Bits 3-0:    Column of the keyboard, 0 is left-most
 
@@ -17,8 +17,8 @@
 %error "arg 3 to define_keycode out of bounds"
 %endif
 
-key_%[%1]_down equ             (%2 << 4) | %3
-key_%[%1]_up   equ 10000000b | (%2 << 4) | %3
+key_%[%1]_up   equ             (%2 << 4) | %3
+key_%[%1]_down equ 10000000b | (%2 << 4) | %3
 %endmacro
 
 ; Fn key (doesn't exist)

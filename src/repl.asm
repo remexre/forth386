@@ -7,6 +7,7 @@ extern console_print_newline
 extern console_print_number
 extern console_print_string
 extern console_refresh
+extern get_ascii
 extern get_keycode
 
 [section .text]
@@ -23,7 +24,8 @@ extern debug_port_write_string
 	sti
 
 .loop:
-	call get_keycode
+	call get_ascii
+	; call get_keycode
 	call console_print_char
 	call console_refresh
 	jmp .loop

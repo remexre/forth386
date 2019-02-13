@@ -10,7 +10,7 @@ more_input        equ 0xff
 
 ; A state machine for scan codes from Set 1 of a PS/2 keyboard. Takes a scan
 ; code in al, returns a key code in al (if possible), 0x7f if input was
-; invalid, or 0xff if more input is required. Trashes eax, ecx.
+; invalid, or 0xff if more input is required. Trashes eax, ebx, ecx.
 global scancode_set_1
 scancode_set_1:
 	; We use a jump table to choose which state to enter.
@@ -25,12 +25,13 @@ scancode_set_1:
 .state0:
 	and eax, 0xff
 	mov cl, al
-	mov al, [state0_jumps+eax]
+	mov ebx, state0_jumps
+	xlatb
 	cmp al, more_input
 	je .state0_more_input
 	ret
 .state0_more_input:
-	and cl, 1
+	and ecx, 1
 	inc cl
 	mov [state], cl
 	ret
