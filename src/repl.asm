@@ -54,8 +54,8 @@ repl:
 	jmp .loop
 
 .bkspc:
-	test cx, cx
-	jz .loop
+	cmp cx, 80*24+2
+	jbe .loop
 
 	dec cx
 	mov byte [console+ecx], 0
@@ -66,7 +66,9 @@ repl:
 	mov dx, [out_cursor]
 	mov [cursor], dx
 
-	mov edi, console+80*24
+	mov edi, console+80*24+2
+	sub ecx, 80*24+2
+	int3
 	call console_print_string
 	call console_print_newline
 
