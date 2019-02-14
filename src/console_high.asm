@@ -6,18 +6,6 @@ extern cursor
 
 [section .text]
 
-; Prints the character in al to the console. Trashes edx.
-global console_print_char
-console_print_char:
-	xor edx, edx
-	mov dx, [cursor]
-	mov [console+edx], al
-	inc dx
-	mov [cursor], dx
-	cmp dx, 80*25
-	je console_scroll
-	ret
-
 ; Prints the number in eax to the console. Trashes eax, ebx, ecx, edx, edi.
 global console_print_number
 console_print_number:
@@ -56,41 +44,34 @@ console_print_number:
 	; instruction.
 	; jmp console_print_string
 
-; Prints a string. The argument is taken in eax, and is a pointer to a dword
-; length, followed by that many bytes of string data. Trashes eax, ebx, ecx,
-; edx, edi.
+; Prints a string. The length is taken in ecx, and a pointer to the string data
+; is taken in edi. Trashes eax, ebx, ecx, edx, edi.
 global console_print_string
 console_print_string:
-	mov ecx, [eax]
-	xor edx, edx
+	xor eax, eax ; Index into string
+	xor edx, edx ; Index into console
 	mov dx, [cursor]
-	xor edi, edi
 
 .loop:
-	cmp edi, ecx
+	cmp eax, ecx
 	jae .end
 
-	mov bl, [eax+4+edi]
+	mov bl, [edi+eax]
 	mov [console+edx], bl
-	inc edi
 
-	inc dx
-	cmp dx, 80*25
+	inc eax
+	inc edx
+
+	cmp edx, 80*24
 	jl .loop
 
 	call console_scroll
-	sub dx, 80
+	sub edx, 80
 	jmp .loop
 
 .end:
 	mov [cursor], dx
 	ret
-
-; Prints a space to the console. Trashes eax, ebx, ecx, edx, edi.
-global console_print_space
-console_print_space:
-	mov eax, space
-	jmp console_print_string
 
 ; Prints a newline to the console. Trashes eax, ecx, edi.
 global console_print_newline
@@ -105,7 +86,7 @@ console_print_newline:
 	lea eax, [eax+eax*4]
 	shl ax, 4
 	mov [cursor], ax
-	cmp ax, 80*25
+	cmp ax, 80*24
 	jae console_scroll
 	ret
 
@@ -119,7 +100,7 @@ console_scroll:
 
 	mov esi, console+80
 	mov edi, console
-	mov ecx, 80*24
+	mov ecx, 80*23
 	mov [cursor], cx
 	rep movsb
 
@@ -140,11 +121,5 @@ numbuf:
 .len: dd 0
 .str: times numbuf_cap db '?'
 .end:
-
-[section .rodata]
-
-space:
-.len: dd 1
-.str: db ' '
 
 ; vi: cc=80 ft=nasm

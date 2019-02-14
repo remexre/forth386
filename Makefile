@@ -13,11 +13,19 @@ debug: out/forth386.img out/forth386.sym
 	gdb -x src/script.gdb
 disas: out/forth386-unstripped.elf
 	objdump -M intel -d $< | less
+help:
+	@echo >&2 'Targets:'
+	@echo >&2 '  all   - Builds the kernel and a boot image'
+	@echo >&2 '  clean - Removes temporary and output files'
+	@echo >&2 '  debug - Opens GDB, connected to QEMU, running the boot image'
+	@echo >&2 '  disas - Disassembles the kernel'
+	@echo >&2 '  run   - Runs the boot image in QEMU'
+	@echo >&2 '  watch - Watches source files, recompiling on changes'
 run: out/forth386.img
 	qemu-system-i386 -drive format=raw,file=out/forth386.img $(QEMUFLAGS)
 watch:
 	watchexec -cre asm,cfg,inc,ld make
-.PHONY: all clean debug disas run watch
+.PHONY: all clean debug disas help run watch
 
 out/forth386.img: out/forth386.elf src/grub.cfg
 	@grub-file --is-x86-multiboot2 out/forth386.elf
