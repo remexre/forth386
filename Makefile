@@ -49,3 +49,5 @@ out/forth386-unstripped.elf: src/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
 tmp/%.o: src/%.asm
 	@mkdir -p tmp
 	nasm -felf -o $@ $< $(NASMFLAGS)
+
+tmp/start.o: src/startup.f

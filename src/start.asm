@@ -13,9 +13,10 @@ extern repl
 ; The entry point to the kernel.
 global start
 start:
+	; Store the address of the Multiboot2 structure.
 	mov [ipb+4], ebx
 
-	cld ; So lodsd increments esi.
+	cld ; So string instructions increment esi.
 
 	mov esp, param_stack_top
 	mov ebp, return_stack_top
@@ -27,10 +28,16 @@ start:
 
 	jmp repl
 
-[section .bss]
+[section .startup]
+
+incbin "src/startup.f"
+
+[section .bss.params]
 
 param_stack: resd 64
 param_stack_top:
+
+[section .bss.return]
 
 return_stack: resd 64
 return_stack_top:

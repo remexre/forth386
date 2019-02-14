@@ -6,20 +6,21 @@ extern console_print_newline
 extern console_print_string
 extern console_refresh
 extern get_ascii
+extern parsed_string.len
+extern parsed_string.ptr
 
 [section .text]
 
-; The main loop of the REPL.
+; The main loop of the REPL. This should be jmped to.
 global repl
-global repl.loop
 repl:
 	sti
-	mov word [cursor], 80*24+2
-	mov al, ' '
-	mov ecx, 80*24
+	xor eax, eax
+	mov ecx, 80*25
 	mov edi, console
 	rep stosb
-	mov word [edi], '> '
+	mov word [console+80*24], '>'
+	mov word [cursor], 80*24+2
 
 .loop:
 	call console_refresh
@@ -29,16 +30,16 @@ repl:
 	mov cx, [cursor]
 
 	cmp al, 0x00 ; Null
-	je .loop
+	je .loop ; Ignore
 
 	cmp al, 0x09 ; Tab
-	je .loop
+	je .loop ; Ignore
 
 	cmp al, 0x1b ; Escape
-	je .loop
+	je .loop ; Ignore
 
 	cmp al, 0x7f ; Delete
-	je .loop
+	je .loop ; Ignore
 
 	cmp al, 0x08 ; Backspace
 	je .bkspc
@@ -69,6 +70,9 @@ repl:
 
 	mov edi, console+80*24+2
 	sub ecx, 80*24+2
+	mov [parsed_string.len], ecx
+	mov [parsed_string.ptr], edi
+
 	call console_print_string
 	call console_print_newline
 
