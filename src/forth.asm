@@ -66,6 +66,17 @@ forth_dot: ; ( n -- )
 	call console_refresh
 	NEXT
 
+forth_drop: ; ( x -- )
+.cfa:
+	add esp, 4
+	NEXT
+
+forth_dup: ; ( x -- x x )
+.cfa:
+	mov eax, [esp]
+	push eax
+	NEXT
+
 forth_fetch: ; ( a-addr -- x )
 .cfa:
 	mov eax, [esp]
@@ -73,9 +84,24 @@ forth_fetch: ; ( a-addr -- x )
 	mov [esp], eax
 	NEXT
 
+forth_from_r: ; ( -- x ) ( R: x -- )
+.cfa:
+	mov eax, [ebp]
+	add ebp, 4
+	push eax
+	NEXT
+
 forth_hex: ; ( -- )
 .cfa:
 	mov dword [forth_printer], console_print_hex
+	NEXT
+
+forth_plus: ; ( a b -- a+b )
+.cfa:
+	pop ecx
+	pop eax
+	add eax, ecx
+	push eax
 	NEXT
 
 forth_store: ; ( x a-addr -- )
@@ -83,6 +109,20 @@ forth_store: ; ( x a-addr -- )
 	pop ecx
 	pop eax
 	mov [ecx], eax
+	NEXT
+
+forth_swap: ; ( x y -- y x )
+.cfa:
+	pop eax
+	xchg eax, [esp]
+	push eax
+	NEXT
+
+forth_to_r: ; ( x -- ) ( R: -- x )
+.cfa:
+	pop eax
+	sub ebp, 4
+	mov [ebp], eax
 	NEXT
 
 [section .data]
