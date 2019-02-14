@@ -13,13 +13,19 @@ read_int:
 ; Reads a token from the currently parsed string.
 token:
 
-[section .bss]
+[section .data]
 
 ; The length and location of the string being parsed.
 global parsed_string.len
 global parsed_string.ptr
 parsed_string:
-.len: resd 1
-.ptr: resd 1
+.len: dd startup_len
+.ptr: dd startup
+
+[section .startup]
+
+startup:
+incbin "src/startup.f"
+startup_len equ $-startup
 
 ; vi: cc=80 ft=nasm

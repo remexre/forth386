@@ -28,18 +28,16 @@ start:
 
 	jmp repl
 
-[section .startup]
+[section .param_stack nobits]
 
-incbin "src/startup.f"
-
-[section .bss.params]
-
-param_stack: resd 64
+global param_stack_top
+param_stack: resb 0x100000
 param_stack_top:
 
-[section .bss.return]
+[section .return_stack nobits]
 
-return_stack: resd 64
+global return_stack_top
+return_stack: resb 0x100000
 return_stack_top:
 
 ; vi: cc=80 ft=nasm

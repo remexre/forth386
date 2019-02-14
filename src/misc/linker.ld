@@ -12,8 +12,8 @@ SECTIONS {
 		*(.forthl)
 		*(.data)
 		*(.rodata)
-		*(.bss)
 	}
+	.bss : { *(.bss) }
 
 	. = 0x123456;
 	.ipb : {
@@ -23,10 +23,10 @@ SECTIONS {
 	.startup : { KEEP(*(.startup)) }
 
 	. = 2M;
-	.params_stack : { *(.bss.params) }
+	.param_stack : { *(.param_stack) }
 
 	. = 3M;
-	.return_stack : { *(.bss.return) }
+	.return_stack : { *(.return_stack) }
 
 	top = .;
 }

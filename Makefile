@@ -53,7 +53,7 @@ out/forth386.elf out/forth386.sym: out/forth386-unstripped.elf
 	cp out/forth386-unstripped.elf out/forth386.elf
 	cp out/forth386-unstripped.elf out/forth386.sym
 	strip --only-keep-debug out/forth386.sym
-	strip --strip-debug out/forth386.elf
+	strip out/forth386.elf
 
 out/forth386-unstripped.elf: src/misc/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
 	@mkdir -p $(dir $@)
@@ -63,4 +63,4 @@ tmp/%.o: src/%.asm
 	@mkdir -p $(dir $@)
 	nasm -felf -o $@ $< $(NASMFLAGS)
 
-tmp/x86/start.o: src/startup.f
+tmp/parse.o: src/startup.f
