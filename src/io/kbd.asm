@@ -81,13 +81,13 @@ get_keycode:
 	sti
 	ret
 
-[section .data]
+[section .bss]
 
 global keycode
-keycode: dw 0
+keycode: resw 1
 
 ; Bitmap of keys, where 1 = down, 0 = up.
 global kbd_state
-kbd_state: times 16 db 0
+kbd_state: resb 16
 
 ; vi: cc=80 ft=nasm

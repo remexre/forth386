@@ -12,6 +12,7 @@ SECTIONS {
 		*(.forthl)
 		*(.data)
 		*(.rodata)
+		*(.bss)
 	}
 
 	. = 0x123456;

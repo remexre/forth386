@@ -90,8 +90,8 @@ console_scroll:
 	pop eax
 	ret
 
-[section .data]
+[section .bss]
 
-numbuf: times 10 db 0
+numbuf: resb 10
 
 ; vi: cc=80 ft=nasm

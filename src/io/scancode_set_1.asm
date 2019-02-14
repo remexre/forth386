@@ -1,7 +1,6 @@
 bits 32
 
-%include "src/debug.inc"
-%include "src/keycodes.inc"
+%include "src/io/keycodes.inc"
 
 invalid_scancode  equ 0x7f
 more_input        equ 0xff
@@ -49,10 +48,10 @@ scancode_set_1:
 	mov al, 0x7f
 	ret
 
-[section .data]
+[section .bss]
 
-state: db 0
-buf: times 6 db 0
+state: resb 1
+buf: resb 6
 
 [section .rodata]
 

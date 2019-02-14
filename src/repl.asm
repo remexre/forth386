@@ -14,12 +14,9 @@ extern parsed_string.ptr
 ; The main loop of the REPL. This should be jmped to.
 global repl
 repl:
-	sti
-	xor eax, eax
-	mov ecx, 80*25
-	mov edi, console
-	rep stosb
 	mov word [console+80*24], '>'
+	mov dx, [cursor]
+	mov [out_cursor], dx
 	mov word [cursor], 80*24+2
 
 .loop:
@@ -94,8 +91,8 @@ brk:
 	int3
 	jmp repl.loop
 
-[section .data]
+[section .bss]
 
-out_cursor: dw 0
+out_cursor: resw 1
 
 ; vi: cc=80 ft=nasm

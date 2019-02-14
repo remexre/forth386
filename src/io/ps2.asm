@@ -1,8 +1,5 @@
 bits 32
 
-%include "src/debug.inc"
-
-extern brk
 extern idt_set
 extern keycode
 extern scancode_set_1

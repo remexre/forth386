@@ -13,13 +13,13 @@ read_int:
 ; Reads a token from the currently parsed string.
 token:
 
-[section .data]
+[section .bss]
 
 ; The length and location of the string being parsed.
 global parsed_string.len
 global parsed_string.ptr
 parsed_string:
-.len: dd 0
-.ptr: dd 0
+.len: resd 1
+.ptr: resd 1
 
 ; vi: cc=80 ft=nasm

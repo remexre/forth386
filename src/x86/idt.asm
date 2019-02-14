@@ -1,6 +1,6 @@
 bits 32
 
-%include "src/debug.inc"
+%include "src/debug/debug.inc"
 
 [section .text]
 
@@ -102,8 +102,10 @@ idtr:
 .size:   dw idt.end - idt - 1
 .offset: dd idt
 
+[section .bss]
+
 global idt
-idt: times 48 dq 0
+idt: resq 48
 .end:
 
 ; vi: cc=80 ft=nasm

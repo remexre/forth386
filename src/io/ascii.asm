@@ -1,6 +1,6 @@
 bits 32
 
-%include "src/debug.inc"
+%include "src/debug/debug.inc"
 
 extern kbd_state
 
