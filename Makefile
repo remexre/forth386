@@ -4,7 +4,7 @@ QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
 UNITS  = ascii console_high console_low debug_port forth gdt kbd ipb idt
-UNITS += multiboot2 ps2 repl scancode_set_1 start
+UNITS += multiboot2 parse ps2 repl scancode_set_1 start
 
 all: out/forth386.elf out/forth386.img
 clean:

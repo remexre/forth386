@@ -6,43 +6,19 @@ extern cursor
 
 [section .text]
 
-; Prints the number in eax to the console. Trashes eax, ebx, ecx, edx, edi.
-global console_print_number
-console_print_number:
-	; Clear numbuf.
-	mov dword [numbuf.str], '????'
-	mov dword [numbuf.str+4], '????'
-	mov word [numbuf.str+8], '??'
+; Prints the number in eax to the console in base 10. Trashes eax, ebx, ecx,
+; edx, edi.
+global console_print_dec
+console_print_dec:
+	int3
+	jmp console_print_hex
 
-	mov ecx, 10
-	mov edi, numbuf.end - 1
-	mov dword [numbuf.len], 0
-
-.loop:
-	test eax, eax
-	jz .loop_exit
-	xor edx, edx
-	div ecx
-	add dl, 0x30
-	mov [edi], dl
-	dec edi
-	inc dword [numbuf.len]
-	test eax, eax
-	jmp .loop
-.loop_exit:
-
-	mov eax, numbuf.len
-
-	; Move up the thing we just printed.
-	mov ecx, numbuf_cap
-	sub ecx, [numbuf.len]
-	lea esi, [numbuf.str+ecx]
-	mov edi, numbuf.str
-	rep movsb
-
-	; Tail call -- since we precede console_print_string, we can drop this
-	; instruction.
-	; jmp console_print_string
+; Prints the number in eax to the console in base 16. Trashes eax, ebx, ecx,
+; edx, edi.
+global console_print_hex
+console_print_hex:
+	int3
+	jmp console_print_hex
 
 ; Prints a string. The length is taken in ecx, and a pointer to the string data
 ; is taken in edi. Trashes eax, ebx, ecx, edx, edi.
@@ -116,10 +92,6 @@ console_scroll:
 
 [section .data]
 
-numbuf_cap equ 10
-numbuf:
-.len: dd 0
-.str: times numbuf_cap db '?'
-.end:
+numbuf: times 10 db 0
 
 ; vi: cc=80 ft=nasm

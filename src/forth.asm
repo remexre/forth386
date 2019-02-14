@@ -1,7 +1,7 @@
 bits 32
 
-extern console_print_number
-extern console_print_space
+extern console_print_dec
+extern console_print_hex
 extern console_refresh
 
 [section .forthk]
@@ -53,10 +53,16 @@ docon_len equ $ - docon
 
 [section .forthl]
 
+forth_decimal: ; ( -- )
+.cfa:
+	mov dword [forth_printer], console_print_dec
+	NEXT
+
 forth_dot: ; ( n -- )
 .cfa:
 	pop eax
-	call console_print_number
+	mov ecx, [forth_printer]
+	call ecx
 	call console_refresh
 	NEXT
 
@@ -67,11 +73,20 @@ forth_fetch: ; ( a-addr -- x )
 	mov [esp], eax
 	NEXT
 
+forth_hex: ; ( -- )
+.cfa:
+	mov dword [forth_printer], console_print_hex
+	NEXT
+
 forth_store: ; ( x a-addr -- )
 .cfa:
 	pop ecx
 	pop eax
 	mov [ecx], eax
 	NEXT
+
+[section .data]
+
+forth_printer: dd console_print_dec
 
 ; vi: cc=80 ft=nasm

@@ -11,6 +11,7 @@ extern get_ascii
 
 ; The main loop of the REPL.
 global repl
+global repl.loop
 repl:
 	sti
 	mov word [cursor], 80*24+2
@@ -68,7 +69,6 @@ repl:
 
 	mov edi, console+80*24+2
 	sub ecx, 80*24+2
-	int3
 	call console_print_string
 	call console_print_newline
 
