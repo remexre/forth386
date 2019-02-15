@@ -71,6 +71,10 @@ repl:
 	mov [parsed_string.ptr], edi
 
 	call console_print_string
+
+	mov ecx, 3
+	mov edi, strs.ok
+	call console_print_string
 	call console_print_newline
 
 	mov dx, [cursor]
@@ -94,5 +98,10 @@ brk:
 [section .bss]
 
 out_cursor: resw 1
+
+[section .rodata]
+
+strs:
+.ok: db " ok"
 
 ; vi: cc=80 ft=nasm

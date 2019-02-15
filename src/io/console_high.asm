@@ -11,7 +11,7 @@ extern cursor
 global console_print_dec
 console_print_dec:
 	int3
-	jmp console_print_hex
+	jmp console_print_dec
 
 ; Prints the number in eax to the console in base 16. Trashes eax, ebx, ecx,
 ; edx, edi.
