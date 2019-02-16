@@ -11,13 +11,30 @@ extern parsed_string.ptr
 
 [section .text]
 
-; The main loop of the REPL. This should be jmped to.
+; The REPL's entry point.
 global repl
 repl:
-	mov word [console+80*24], '>'
+.loop:
+	call read_line
+
+	mov ecx, 3
+	mov edi, strs.ok
+	call console_print_string
+	call console_print_newline
+
+	jmp .loop
+
+; Reads a line.
+read_line:
 	mov dx, [cursor]
 	mov [out_cursor], dx
+
+	mov word [console+80*24], '>'
 	mov word [cursor], 80*24+2
+	xor eax, eax
+	mov ecx, 79
+	mov edi, console+80*24+1
+	rep stosb
 
 .loop:
 	call console_refresh
@@ -70,30 +87,14 @@ repl:
 	mov [parsed_string.len], ecx
 	mov [parsed_string.ptr], edi
 
-	call console_print_string
-
-	mov ecx, 3
-	mov edi, strs.ok
-	call console_print_string
-	call console_print_newline
-
-	mov dx, [cursor]
-	mov [out_cursor], dx
-
-	mov word [cursor], 80*24+2
-	xor eax, eax
-	mov ecx, 79
-	mov edi, console+80*24+1
-	rep stosb
-
-	jmp .loop
+	jmp console_print_string
 
 ; The handler for the Pause/Break key. When that key is pressed, this function
 ; is jumped to.
 global brk
 brk:
 	int3
-	jmp repl.loop
+	jmp repl
 
 [section .bss]
 
