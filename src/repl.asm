@@ -5,6 +5,7 @@ extern cursor
 extern console_print_newline
 extern console_print_string
 extern console_refresh
+extern forth_cold.cfa
 extern get_ascii
 extern parsed_string.len
 extern parsed_string.ptr
@@ -14,15 +15,9 @@ extern parsed_string.ptr
 ; The REPL's entry point.
 global repl
 repl:
-.loop:
-	call read_line
-
-	mov ecx, 3
-	mov edi, strs.ok
-	call console_print_string
-	call console_print_newline
-
-	jmp .loop
+	mov esi, forth_cold.cfa
+	lodsb
+	jmp eax
 
 ; Reads a line.
 read_line:

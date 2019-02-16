@@ -8,8 +8,7 @@ SECTIONS {
 	}
 	.forth386 : {
 		*(.text)
-		*(.forthk)
-		*(.forthl)
+		*(.forth)
 		*(.data)
 		*(.rodata)
 	}

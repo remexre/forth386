@@ -4,7 +4,8 @@ QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
 UNITS += debug/debug_port
-UNITS += forth
+UNITS += forth/kernel
+UNITS += forth/repl
 UNITS += io/ascii
 UNITS += io/console_high
 UNITS += io/console_low
@@ -63,4 +64,6 @@ tmp/%.o: src/%.asm
 	@mkdir -p $(dir $@)
 	nasm -felf -o $@ $< $(NASMFLAGS)
 
+tmp/forth/kernel.o: src/forth/common.inc
+tmp/forth/repl.o: src/forth/common.inc
 tmp/parse.o: src/startup.f

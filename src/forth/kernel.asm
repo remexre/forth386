@@ -6,44 +6,26 @@ extern console_print_string
 extern console_refresh
 extern heap_start
 
-[section .forthk]
+[section .forth]
 
-; We choose to use:
-;
-;  - eax as W
-;  - ebx unused
-;  - ecx as X / unused
-;  - edx as Y / unused
-;  - esi as IP
-;  - edi unused
-;  - ebp as RSP
-;  - esp as PSP
+%include "src/forth/common.inc"
 
-next:
-	lodsd
-	jmp eax
-next_len equ $ - next
-
-%macro NEXT 0
-	lodsd
-	jmp eax
-%endmacro
-
+global enter
 enter:
+	dd forth_dup
+	db 0x00, 5, "ENTER"
 	; Push IP to the Return Stack
 	xchg ebp, esp
 	push esi
 	xchg ebp, esp
 	; Make IP point to the Parameter Field
-	lea esi, [eax+next_len]
+	lea esi, [eax+NEXT_LEN]
 	NEXT
 
-exit:
-	; Pop the previously pushed IP from the Return Stack
-	xchg ebp, esp
-	pop esi
-	xchg ebp, esp
-	NEXT
+forth_docolon:
+.cfa:
+	; TODO
+	int3
 
 docon:
 	; Move the (only) word in the Parameter Field into eax
@@ -53,9 +35,7 @@ docon:
 	NEXT
 docon_len equ $ - docon
 
-[section .forthl]
-
-forth_brack_left:
+forth_brack_left: ; ( -- )
 	dd 0
 	db 0x01, 1, "["
 .cfa:
@@ -68,6 +48,17 @@ forth_brack_right: ; ( -- )
 .cfa:
 	mov dword [forth_state], 1
 	NEXT
+
+forth_colon: ; ( C: "name" -- colon-sys )
+	dd forth_brack_right
+	db 0x00, 1, ":"
+.cfa:
+	jmp enter
+.pfa:
+	dd forth_create.cfa
+	dd forth_docolon.cfa
+	dd forth_brack_right.cfa
+	dd forth_exit.cfa
 
 forth_create: ; ( -- a-addr )
 	dd forth_brack_right
@@ -109,8 +100,18 @@ forth_dup: ; ( x -- x x )
 	push eax
 	NEXT
 
-forth_fetch: ; ( a-addr -- x )
+forth_exit: ; ( -- ) ( R: nest-sys -- )
 	dd forth_dup
+	db 0x00, 4, "EXIT"
+.cfa:
+	; Pop the previously pushed IP from the Return Stack
+	xchg ebp, esp
+	pop esi
+	xchg ebp, esp
+	NEXT
+
+forth_fetch: ; ( a-addr -- x )
+	dd forth_exit
 	db 0x00, 1, "@"
 .cfa:
 	mov eax, [esp]
@@ -194,8 +195,10 @@ forth_type: ; ( c-addr u -- )
 	pop edi
 	test ecx, ecx
 	jz .cfa.end
+	int3
 	call console_print_string
 .cfa.end:
+	int3
 	NEXT
 
 [section .data]
@@ -203,6 +206,7 @@ forth_type: ; ( c-addr u -- )
 forth_heap: dd heap_start
 forth_last: dd forth_type
 forth_printer: dd console_print_dec
+global forth_state
 forth_state: dd 0
 
 ; vi: cc=80 ft=nasm
