@@ -4,6 +4,7 @@ extern console_print_dec
 extern console_print_hex
 extern console_print_string
 extern console_refresh
+extern heap_start
 
 [section .forthk]
 
@@ -54,8 +55,30 @@ docon_len equ $ - docon
 
 [section .forthl]
 
-forth_decimal: ; ( -- )
+forth_brack_left:
 	dd 0
+	db 0x01, 1, "["
+.cfa:
+	mov dword [forth_state], 0
+	NEXT
+
+forth_brack_right: ; ( -- )
+	dd forth_brack_left
+	db 0x00, 1, "]"
+.cfa:
+	mov dword [forth_state], 1
+	NEXT
+
+forth_create: ; ( -- a-addr )
+	dd forth_brack_right
+	db 0x00, 6, "CREATE"
+.cfa:
+	int3
+	push dword 0xb8000
+	NEXT
+
+forth_decimal: ; ( -- )
+	dd forth_create
 	db 0x00, 7, "DECIMAL"
 .cfa:
 	mov dword [forth_printer], console_print_dec
@@ -116,7 +139,7 @@ forth_immediate: ; ( -- )
 	db 0x00, 9, "IMMEDIATE"
 .cfa:
 	mov eax, [forth_last]
-	or [eax+4], 0x01
+	or byte [eax+4], 0x01
 	NEXT
 
 forth_plus: ; ( a b -- a+b )
@@ -129,8 +152,15 @@ forth_plus: ; ( a b -- a+b )
 	push eax
 	NEXT
 
-forth_store: ; ( x a-addr -- )
+forth_state_word: ; ( -- a-addr )
 	dd forth_plus
+	db 0x00, 5, "STATE"
+.cfa:
+	push dword forth_state
+	NEXT
+
+forth_store: ; ( x a-addr -- )
+	dd forth_state_word
 	db 0x00, 1, "!"
 .cfa:
 	pop ecx
@@ -170,7 +200,9 @@ forth_type: ; ( c-addr u -- )
 
 [section .data]
 
+forth_heap: dd heap_start
 forth_last: dd forth_type
 forth_printer: dd console_print_dec
+forth_state: dd 0
 
 ; vi: cc=80 ft=nasm

@@ -28,5 +28,5 @@ SECTIONS {
 	. = 3M;
 	.return_stack : { *(.return_stack) }
 
-	top = .;
+	heap_start = .;
 }
