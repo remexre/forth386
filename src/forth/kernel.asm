@@ -70,8 +70,27 @@ forth_brack_right: ; ( -- )
 	mov dword [forth_state], 1
 	NEXT
 
-forth_colon: ; ( C: "name" -- colon-sys )
+forth_char_fetch: ; ( c-addr -- char )
 	dd forth_brack_right
+	db 0x00, 2, "C@"
+.cfa:
+	FORTH_POP eax
+	mov al, [eax]
+	and eax, 0xff
+	push eax
+	NEXT
+
+forth_char_store: ; ( char c-addr -- )
+	dd forth_char_fetch
+	db 0x00, 2, "C!"
+.cfa:
+	FORTH_POP ecx
+	FORTH_POP eax
+	mov [ecx], al
+	NEXT
+
+forth_colon: ; ( C: "name" -- colon-sys )
+	dd forth_char_store
 	db 0x00, 1, ":"
 .cfa:
 	JMP_ENTER
@@ -154,13 +173,14 @@ forth_drop: ; ( x -- )
 	dd forth_dot_s
 	db 0x00, 4, "DROP"
 .cfa:
-	add esp, 4
+	FORTH_POP eax
 	NEXT
 
 forth_dup: ; ( x -- x x )
 	dd forth_drop
 	db 0x00, 3, "DUP"
 .cfa:
+	FORTH_POP_CHK 1
 	mov eax, [esp]
 	push eax
 	NEXT
@@ -191,6 +211,7 @@ forth_fetch: ; ( a-addr -- x )
 	dd forth_exit
 	db 0x00, 1, "@"
 .cfa:
+	FORTH_POP_CHK 1
 	mov eax, [esp]
 	mov eax, [eax]
 	mov [esp], eax
@@ -237,8 +258,8 @@ forth_minus: ; ( a b -- a-b )
 	dd forth_interpret
 	db 0x00, 1, "-"
 .cfa:
-	pop ecx
-	pop eax
+	FORTH_POP ecx
+	FORTH_POP eax
 	sub eax, ecx
 	push eax
 	NEXT
@@ -256,8 +277,8 @@ forth_plus: ; ( a b -- a+b )
 	dd forth_minus
 	db 0x00, 1, "+"
 .cfa:
-	pop ecx
-	pop eax
+	FORTH_POP ecx
+	FORTH_POP eax
 	add eax, ecx
 	push eax
 	NEXT
@@ -320,8 +341,8 @@ forth_store: ; ( x a-addr -- )
 	dd forth_state_word
 	db 0x00, 1, "!"
 .cfa:
-	pop ecx
-	pop eax
+	FORTH_POP ecx
+	FORTH_POP eax
 	mov [ecx], eax
 	NEXT
 
@@ -329,6 +350,7 @@ forth_swap: ; ( x y -- y x )
 	dd forth_store
 	db 0x00, 4, "SWAP"
 .cfa:
+	FORTH_POP_CHK 2
 	pop eax
 	xchg eax, [esp]
 	push eax
@@ -338,7 +360,7 @@ forth_to_r: ; ( x -- ) ( R: -- x )
 	dd forth_swap
 	db 0x00, 2, ">R"
 .cfa:
-	pop eax
+	FORTH_POP eax
 	sub ebp, 4
 	mov [ebp], eax
 	NEXT
@@ -347,8 +369,8 @@ forth_type: ; ( c-addr u -- )
 	dd forth_to_r
 	db 0x00, 4, "TYPE"
 .cfa:
-	pop ecx
-	pop edi
+	FORTH_POP ecx
+	FORTH_POP edi
 	test ecx, ecx
 	jz .cfa.end
 	call console_print_string
@@ -359,7 +381,7 @@ forth_zero_equal: ; ( x -- flag )
 	dd forth_type
 	db 0x00, 2, "0="
 .cfa:
-	pop eax
+	FORTH_POP eax
 	test eax, eax
 	setnz al
 	and eax, 0xff

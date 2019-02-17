@@ -25,9 +25,13 @@
 ; all others are reserved.
 
 %macro FORTH_POP 1
-	cmp esp, param_stack_top
-	jae underflow
+	FORTH_POP_CHK 1
 	pop dword %1
+%endmacro
+
+%macro FORTH_POP_CHK 1
+	cmp esp, param_stack_top-(4*%1)
+	ja underflow
 %endmacro
 
 %macro JMP_ENTER 0

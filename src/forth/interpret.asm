@@ -29,18 +29,10 @@ interpret:
 
 	call capitalize
 
-	call is_number
-	test eax, eax
-	jz .find_word
-
-	call parse_number
-	push eax
-	jmp .loop
-
 .find_word:
 	call find
 	test eax, eax
-	jz .word_not_found
+	jz .as_number
 
 	mov esi, addr_of_loop
 	lea eax, [eax+6+ecx]
@@ -48,6 +40,15 @@ interpret:
 
 .done:
 	jmp forth_exit.cfa
+
+.as_number:
+	call is_number
+	test eax, eax
+	jz .word_not_found
+
+	call parse_number
+	push eax
+	jmp .loop
 
 .word_not_found:
 	push ecx
