@@ -80,7 +80,7 @@ forth_decimal: ; ( -- )
 	dd forth_create
 	db 0x00, 7, "DECIMAL"
 .cfa:
-	mov dword [forth_printer], console_print_dec
+	mov dword [forth_base], 10
 	NEXT
 
 forth_dot: ; ( n -- )
@@ -88,8 +88,7 @@ forth_dot: ; ( n -- )
 	db 0x00, 1, "."
 .cfa:
 	pop eax
-	mov ecx, [forth_printer]
-	call ecx
+	int3 ; TODO
 	call console_refresh
 	NEXT
 
@@ -140,14 +139,14 @@ forth_hex: ; ( -- )
 	dd forth_from_r
 	db 0x00, 3, "HEX"
 .cfa:
-	mov dword [forth_printer], console_print_hex
+	mov dword [forth_base], 16
 	NEXT
 
 forth_immediate: ; ( -- )
 	dd forth_hex
 	db 0x00, 9, "IMMEDIATE"
 .cfa:
-	mov eax, [forth_last]
+	mov eax, [forth_dictionary]
 	or byte [eax+4], 0x01
 	NEXT
 
@@ -211,10 +210,12 @@ forth_type: ; ( c-addr u -- )
 
 [section .data]
 
+forth_base: dd 10
+forth_dictionary: dd forth_type
 forth_heap: dd heap_start
-forth_last: dd forth_type
-forth_printer: dd console_print_dec
 global forth_state
 forth_state: dd 0
+global forth_to_in
+forth_to_in: dd 0
 
 ; vi: cc=80 ft=nasm

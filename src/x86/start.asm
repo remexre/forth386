@@ -5,6 +5,7 @@ extern gdt_init
 extern idt_init
 extern ps2_init
 
+extern cold.cfa
 extern console_print_string
 extern console_print_newline
 extern console_refresh
@@ -29,18 +30,20 @@ start:
 	call console_init
 	call ps2_init
 
-	mov esi, .halt
+	mov esi, halt
+	jmp cold.cfa
 
-.halt:
+global halt
+halt:
 	call console_print_newline
 	mov ecx, 10
-	mov edi, .halt_str
+	mov edi, .str
 	call console_print_string
 	call console_print_newline
 	call console_refresh
 	cli
 	hlt
-.halt_str: db "Halting..."
+.str: db "Halting..."
 
 [section .param_stack nobits]
 

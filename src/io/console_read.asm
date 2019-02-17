@@ -4,9 +4,10 @@ extern console
 extern cursor
 extern console_print_string
 extern console_refresh
+extern forth_to_in
 extern get_ascii
-extern parsed_string.len
-extern parsed_string.ptr
+extern input_buf
+extern input_len
 
 [section .text]
 
@@ -73,12 +74,24 @@ console_read_line:
 	mov dx, [out_cursor]
 	mov [cursor], dx
 
-	mov edi, console+80*24+2
+	push esi
 	sub ecx, 80*24+2
-	mov [parsed_string.len], ecx
-	mov [parsed_string.ptr], edi
+	mov [input_len], ecx
+	mov esi, console+80*24+2
+	mov edi, input_buf
+	rep movsb
+	mov ecx, [input_len]
+	neg ecx
+	add ecx, 80
+	mov al, 0
+	rep stosb
+	pop esi
 
 	mov word [console+80*24], 0x11
+	mov dword [forth_to_in], 0
+
+	mov ecx, [input_len]
+	mov edi, input_buf
 	jmp console_print_string
 
 [section .bss]
