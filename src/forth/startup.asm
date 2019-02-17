@@ -1,5 +1,6 @@
 bits 32
 
+extern forth_eat_flaming_death.cfa
 extern interpret
 extern set_parse_buffer
 
@@ -12,7 +13,9 @@ cold:
 	mov ecx, startup_len
 	mov edi, startup
 	call set_parse_buffer
+	mov esi, .addr_of_flaming_death
 	jmp interpret
+.addr_of_flaming_death: dd forth_eat_flaming_death.cfa
 
 [section .startup]
 

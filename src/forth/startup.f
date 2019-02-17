@@ -1,7 +1,8 @@
-$123456 $3 TYPE CR REFRESH
-
 \ : CRR CR REFRESH ;
-\ : NIP SWAP DROP ;
+$123456 $3 TYPE CR
+
+1 2 3
+: NIP SWAP DROP ;
 \ : OVER >R DUP R> SWAP ;
 \ : 2DUP OVER OVER ;
 
@@ -28,6 +29,11 @@ $123456 $3 TYPE CR REFRESH
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
+\ : set-color [ $123456 #16 + @ ] LITERAL c! ;
+\ : hacker-mode #0a set-color ;
+\ : reasonable-taste #0f set-color ;
+
+\ reasonable-taste
 ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

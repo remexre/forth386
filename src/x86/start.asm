@@ -45,6 +45,7 @@ halt:
 	call console_refresh
 	cli
 	hlt
+	jmp halt
 .str: db "Halting..."
 
 [section .param_stack nobits]

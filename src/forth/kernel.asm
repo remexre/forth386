@@ -1,5 +1,6 @@
 bits 32
 
+extern color
 extern console_print_newline
 extern console_print_number
 extern console_print_string
@@ -18,6 +19,7 @@ extern underflow
 global enter
 global forth_base
 global forth_dictionary
+global forth_eat_flaming_death.cfa
 global forth_exit.cfa
 global forth_quit.cfa
 global forth_state
@@ -38,16 +40,7 @@ enter:
 
 forth_docolon:
 .cfa:
-	; TODO
-	int3
-
-docon:
-	; Move the (only) word in the Parameter Field into eax
-	mov eax, [eax+docon_len]
-	; Push it to the Parameter Stack
-	push eax
-	NEXT
-docon_len equ $ - docon
+	jmp forth_eat_flaming_death.cfa ; TODO
 
 forth_abort: ; ( x* -- )
 	dd 0
@@ -96,8 +89,8 @@ forth_colon: ; ( C: "name" -- colon-sys )
 	JMP_ENTER
 .pfa:
 	dd forth_create.cfa
-	dd forth_docolon.cfa
-	dd forth_brack_right.cfa
+	; dd forth_docolon.cfa
+	; dd forth_brack_right.cfa
 	dd forth_exit.cfa
 
 forth_cr: ; ( -- a-addr )
@@ -111,6 +104,7 @@ forth_create: ; ( -- a-addr )
 	dd forth_cr
 	db 0x00, 6, "CREATE"
 .cfa:
+	call parse_string
 	int3 ; TODO
 	push dword 0xb8000
 	NEXT
@@ -193,6 +187,7 @@ forth_eat_flaming_death:
 	mov edi, .pfa
 	call console_print_string
 	call console_print_newline
+	mov byte [color], 0x4e
 	jmp halt
 .pfa:
 	db "Dying in a fire..."
@@ -264,30 +259,21 @@ forth_minus: ; ( a b -- a-b )
 	push eax
 	NEXT
 
-forth_parse_string: ; ( -- c-addr u )
+forth_paren_left:
 	dd forth_minus
-	db 0x00, 12, "PARSE-STRING"
+	db 0x01, 1, "("
 .cfa:
-	call parse_string
-	push ecx
-	push edi
+	or dword [forth_state], 0x02
 	NEXT
 
 forth_plus: ; ( a b -- a+b )
-	dd forth_minus
+	dd forth_paren_left
 	db 0x00, 1, "+"
 .cfa:
 	FORTH_POP ecx
 	FORTH_POP eax
 	add eax, ecx
 	push eax
-	NEXT
-
-forth_read_line: ; ( -- )
-	dd forth_plus
-	db 0x00, 9, "READ-LINE"
-.cfa:
-	call console_read_line
 	NEXT
 
 forth_refresh: ; ( -- )
@@ -303,6 +289,7 @@ forth_quit: ; ( R: x* -- )
 .cfa:
 	mov ebp, return_stack_top
 	mov dword [forth_state], 0
+	call console_read_line
 	mov eax, .enter
 	jmp .enter
 .print_ok:
@@ -325,17 +312,27 @@ forth_quit: ; ( R: x* -- )
 .enter:
 	JMP_ENTER
 .pfa:
-	dd forth_read_line.cfa
 	dd forth_interpret.cfa
 	dd forth_quit.print_ok
 	dd forth_quit.cfa
 
-forth_state_word: ; ( -- a-addr )
+forth_semicolon: ; ( -- )
 	dd forth_quit
+	db 0x01, 1, ";"
+.cfa:
+	mov dword [forth_state], 0
+	NEXT
+
+forth_state_word: ; ( -- a-addr )
+	dd forth_semicolon
 	db 0x00, 5, "STATE"
 .cfa:
-	push dword forth_state
-	NEXT
+	JMP_ENTER
+.pfa:
+	; dd forth_create.cfa
+	; dd forth_docolon.cfa
+	; dd forth_brack_right.cfa
+	dd forth_exit.cfa
 
 forth_store: ; ( x a-addr -- )
 	dd forth_state_word

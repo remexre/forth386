@@ -6,6 +6,7 @@ extern console_print_string
 extern console_refresh
 extern find
 extern forth_exit.cfa
+extern forth_state
 extern is_number
 extern parse_number
 extern parse_string
@@ -29,7 +30,20 @@ interpret:
 
 	call capitalize
 
-.find_word:
+	mov eax, [forth_state]
+	mov eax, [.jump_table+4*eax]
+	jmp eax
+.jump_table:
+	; 0 -> interpret mode
+	dd .interpret_word
+	; 1 -> compile mode
+	dd .compile_word
+	; 2 -> comment mode
+	dd .comment_word
+	; 3 -> comment mode
+	dd .comment_word
+
+.interpret_word:
 	call find
 	test eax, eax
 	jz .as_number
@@ -37,9 +51,6 @@ interpret:
 	mov esi, addr_of_loop
 	lea eax, [eax+6+ecx]
 	jmp eax
-
-.done:
-	jmp forth_exit.cfa
 
 .as_number:
 	call is_number
@@ -49,6 +60,20 @@ interpret:
 	call parse_number
 	push eax
 	jmp .loop
+
+.compile_word:
+	extern forth_eat_flaming_death.cfa
+	jmp forth_eat_flaming_death.cfa
+
+.comment_word:
+	mov al, ')'
+	repne scasb
+	jne .loop
+	and dword [forth_state], 1
+	jmp .loop
+
+.done:
+	jmp forth_exit.cfa
 
 .word_not_found:
 	push ecx
