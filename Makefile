@@ -5,6 +5,7 @@ QEMUFLAGS += -m 64M
 
 UNITS += debug/debug_port
 UNITS += forth/kernel
+UNITS += forth/startup
 UNITS += io/ascii
 UNITS += io/console_read
 UNITS += io/console_low
@@ -13,7 +14,6 @@ UNITS += io/kbd
 UNITS += io/ps2
 UNITS += io/scancode_set_1
 UNITS += ipb
-UNITS += parse
 UNITS += x86/gdt
 UNITS += x86/idt
 UNITS += x86/multiboot2
@@ -64,5 +64,4 @@ tmp/%.o: src/%.asm
 	nasm -felf -o $@ $< $(NASMFLAGS)
 
 tmp/forth/kernel.o: src/forth/common.inc
-tmp/forth/repl.o: src/forth/common.inc
-tmp/parse.o: src/startup.f
+tmp/forth/startup.o: src/forth/startup.asm

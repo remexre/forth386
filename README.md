@@ -3,9 +3,11 @@ forth386
 
 A bare-metal Forth for i386 machines. Boots via Multiboot 2. Assumes a PS/2 keyboard (or PS/2 emulation).
 
-Note that this does not follow the ANS Forth standard.
+Note that this does not precisely follow the ANS Forth standard.
 
 Based on http://www.bradrodriguez.com/papers/moving1.htm -- read it before hacking.
+
+Run `make help` to list available targets.
 
 Building
 --------
@@ -24,8 +26,8 @@ License
 
 Licensed under either of
 
--	Apache License, Version 2.0, (http://www.apache.org/licenses/LICENSE-2.0\)
--	MIT License (http://opensource.org/licenses/MIT\)
+-	Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+-	MIT License: http://opensource.org/licenses/MIT
 
 at your option.
 
