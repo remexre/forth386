@@ -3,25 +3,53 @@ bits 32
 extern color
 extern console
 extern cursor
+extern forth_base
 
-global console_print_dec
-global console_print_hex
 global console_print_newline
+global console_print_number
 global console_print_string
 
 [section .text]
 
-; Prints the number in eax to the console in base 10. Trashes eax, ebx, ecx,
-; edx, edi.
-console_print_dec:
-	int3
-	jmp console_print_dec
+; Prints the number in eax to the console in the base specified in forth_base.
+; Trashes eax, ebx, ecx, edx, edi.
+console_print_number:
+	test eax, eax
+	jz .zero
 
-; Prints the number in eax to the console in base 16. Trashes eax, ebx, ecx,
-; edx, edi.
-console_print_hex:
-	int3
-	jmp console_print_hex
+	xor ecx, ecx
+
+	; Put the reversed string into numbuf.
+.fill_loop:
+	xor edx, edx
+	div dword [forth_base]
+	mov dl, [number_map+edx]
+	mov [numbuf+ecx], dl
+	inc ecx
+
+	test eax, eax
+	jnz .fill_loop
+
+	; Reverse the string.
+	xor ebx, ebx
+	mov edx, 31
+.rev_loop:
+	mov al, [numbuf+ebx]
+	xchg [numbuf+edx], al
+	mov [numbuf+ebx], al
+	inc ebx
+	dec edx
+	cmp ebx, ecx
+	jne .rev_loop
+
+	lea edi, [numbuf+edx+1]
+	jmp console_print_string
+
+.zero:
+	mov edi, .zero_str
+	mov ecx, 1
+	jmp console_print_string
+.zero_str: db "0"
 
 ; Prints a string. The length is taken in ecx, and a pointer to the string data
 ; is taken in edi. Trashes eax, ebx, ecx, edx, edi.
@@ -82,7 +110,7 @@ console_scroll:
 	rep movsb
 
 	mov ecx, 80
-	mov al, ' '
+	mov al, " "
 	rep stosb
 
 	pop edi
@@ -91,8 +119,12 @@ console_scroll:
 	pop eax
 	ret
 
+[section .rodata]
+
+number_map: db "0123456789ABCDEF"
+
 [section .bss]
 
-numbuf: resb 10
+numbuf: resb 32
 
 ; vi: cc=80 ft=nasm

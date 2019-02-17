@@ -29,7 +29,7 @@ parse_string:
 
 .check_for_comment:
 	mov al, [edi+ecx]
-	cmp al, '\'
+	cmp al, "\"
 	je .skip_comment
 
 	mov edx, ecx

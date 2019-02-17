@@ -12,7 +12,7 @@ global ipb
 
 ; The Important Pointer Block.
 ipb:
-	db 'I', 'P', 'B', 0x00
+	db "I", "P", "B", 0x00
 	dd 0 ; Gets filled in with address of multiboot2 information structure.
 	dd console
 	dd cursor

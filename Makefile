@@ -7,6 +7,7 @@ UNITS += debug/debug_port
 UNITS += forth/kernel
 UNITS += forth/parse
 UNITS += forth/startup
+UNITS += forth/utils
 UNITS += io/ascii
 UNITS += io/console_read
 UNITS += io/console_low

@@ -1,15 +1,18 @@
 bits 32
 
-extern console_print_dec
-extern console_print_hex
+extern console_print_newline
+extern console_print_number
 extern console_print_string
 extern console_refresh
+extern halt
 extern heap_start
 extern param_stack_top
 extern return_stack_top
 
 global enter
 global forth_abort.cfa
+global forth_base
+global forth_dictionary
 global forth_state
 global forth_to_in
 
@@ -41,13 +44,15 @@ docon:
 	NEXT
 docon_len equ $ - docon
 
-forth_abort:
+forth_abort: ; ( x* -- )
+	dd 0
+	db 0x00, 5, "ABORT"
 .cfa:
 	mov esp, param_stack_top
-	NEXT
+	jmp forth_quit.cfa
 
 forth_brack_left: ; ( -- )
-	dd 0
+	dd forth_abort
 	db 0x01, 1, "["
 .cfa:
 	mov dword [forth_state], 0
@@ -71,11 +76,18 @@ forth_colon: ; ( C: "name" -- colon-sys )
 	dd forth_brack_right.cfa
 	dd forth_exit.cfa
 
+forth_cr: ; ( -- a-addr )
+	dd forth_colon
+	db 0x00, 2, "CR"
+.cfa:
+	call console_print_newline
+	NEXT
+
 forth_create: ; ( -- a-addr )
-	dd forth_brack_right
+	dd forth_cr
 	db 0x00, 6, "CREATE"
 .cfa:
-	int3
+	int3 ; TODO
 	push dword 0xb8000
 	NEXT
 
@@ -91,12 +103,50 @@ forth_dot: ; ( n -- )
 	db 0x00, 1, "."
 .cfa:
 	pop eax
-	int3 ; TODO
-	call console_refresh
+	call console_print_number
 	NEXT
 
-forth_drop: ; ( x -- )
+forth_dot_s: ; ( -- )
 	dd forth_dot
+	db 0x00, 2, ".S"
+.cfa:
+	mov ecx, 1
+	mov edi, .pfa
+	call console_print_string
+	mov eax, param_stack_top
+	sub eax, esp
+	shr eax, 2
+	call console_print_number
+	mov ecx, 1
+	mov edi, .pfa+1
+	call console_print_string
+
+	push esi
+	mov esi, param_stack_top
+.loop:
+	sub esi, 4
+	cmp esi, esp
+	je .done
+
+	mov ecx, 1
+	mov edi, .pfa+2
+	call console_print_string
+
+	mov eax, [esi]
+	call console_print_number
+
+	jmp .loop
+
+.done:
+	pop esi
+	call console_print_newline
+	call console_refresh
+	NEXT
+.pfa:
+	db "<> "
+
+forth_drop: ; ( x -- )
+	dd forth_dot_s
 	db 0x00, 4, "DROP"
 .cfa:
 	add esp, 4
@@ -153,11 +203,31 @@ forth_immediate: ; ( -- )
 	or byte [eax+4], 0x01
 	NEXT
 
+forth_int3: ; ( c-addr u -- )
+	dd forth_immediate
+	db 0x00, 4, "INT3"
+.cfa:
+	int3
+	NEXT
+
 forth_interpret: ; ( c-addr u -- )
-	; TODO
+	dd forth_int3
+	db 0x02, 9, "INTERPRET"
+.cfa:
+	jmp halt ; TODO
+
+forth_minus: ; ( a b -- a-b )
+	dd forth_interpret
+	db 0x00, 1, "-"
+.cfa:
+	pop ecx
+	pop eax
+	sub eax, ecx
+	push eax
+	NEXT
 
 forth_plus: ; ( a b -- a+b )
-	dd forth_immediate
+	dd forth_minus
 	db 0x00, 1, "+"
 .cfa:
 	pop ecx
@@ -166,8 +236,27 @@ forth_plus: ; ( a b -- a+b )
 	push eax
 	NEXT
 
-forth_state_word: ; ( -- a-addr )
+forth_refresh: ; ( -- )
 	dd forth_plus
+	db 0x00, 7, "REFRESH"
+.cfa:
+	call console_refresh
+	NEXT
+
+forth_quit: ; ( R: x* -- )
+	dd forth_refresh
+	db 0x00, 4, "QUIT"
+.cfa:
+	mov ebp, return_stack_top
+	mov dword [forth_state], 0
+.eat_flaming_death:
+	int3
+	cli
+	hlt
+	jmp .eat_flaming_death
+
+forth_state_word: ; ( -- a-addr )
+	dd forth_quit
 	db 0x00, 5, "STATE"
 .cfa:
 	push dword forth_state
@@ -208,10 +297,8 @@ forth_type: ; ( c-addr u -- )
 	pop edi
 	test ecx, ecx
 	jz .cfa.end
-	int3
 	call console_print_string
 .cfa.end:
-	int3
 	NEXT
 
 [section .data]

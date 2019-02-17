@@ -1,4 +1,9 @@
-$123456 $3 TYPE CR
+$123456 $3 TYPE CR REFRESH
+$123456 @ $00425046 - $123456 SWAP .S TYPE CR REFRESH .S
+1 2 3 .S
+0 .S
+
+\ : CRR CR REFRESH ;
 
 \ : NIP SWAP DROP ;
 \ : OVER >R DUP R> SWAP ;
@@ -8,7 +13,7 @@ $123456 $3 TYPE CR
 \ : HELLO-WORLD ." Hello, world!" ;
 
 \ $123456 CONSTANT IPB
-\ ." IPB-CHECK" IPB @ $00668073 2DUP = . . . ;
+\ ." IPB-CHECK" IPB @ $00425049 2DUP = . . . ;
 
 \ IPB 4 + @                 CONSTANT MB2-STRUCT
 \ MB2-STRUCT MB2-STRUCT @ + CONSTANT MB2-STRUCT-END
@@ -27,6 +32,6 @@ $123456 $3 TYPE CR
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
-ABORT
+\ ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :
