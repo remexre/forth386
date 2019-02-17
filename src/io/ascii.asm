@@ -1,14 +1,13 @@
 bits 32
 
-%include "src/debug/debug.inc"
-
 extern kbd_state
+
+global keycode_to_ascii
 
 [section .text]
 
 ; Converts a keycode in al to an ASCII character. Returns the ASCII character
 ; in al, or 0x00 if there is no corresponding character. Trashes eax, ebx, ecx.
-global keycode_to_ascii
 keycode_to_ascii:
 	and al, 0x7f
 

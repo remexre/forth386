@@ -8,11 +8,15 @@ extern heap_start
 extern param_stack_top
 extern return_stack_top
 
+global enter
+global forth_abort.cfa
+global forth_state
+global forth_to_in
+
 [section .forth]
 
 %include "src/forth/common.inc"
 
-global enter
 enter:
 	dd forth_dup
 	db 0x00, 5, "ENTER"
@@ -37,7 +41,6 @@ docon:
 	NEXT
 docon_len equ $ - docon
 
-global forth_abort.cfa
 forth_abort:
 .cfa:
 	mov esp, param_stack_top
@@ -150,6 +153,9 @@ forth_immediate: ; ( -- )
 	or byte [eax+4], 0x01
 	NEXT
 
+forth_interpret: ; ( c-addr u -- )
+	; TODO
+
 forth_plus: ; ( a b -- a+b )
 	dd forth_immediate
 	db 0x00, 1, "+"
@@ -213,9 +219,7 @@ forth_type: ; ( c-addr u -- )
 forth_base: dd 10
 forth_dictionary: dd forth_type
 forth_heap: dd heap_start
-global forth_state
 forth_state: dd 0
-global forth_to_in
 forth_to_in: dd 0
 
 ; vi: cc=80 ft=nasm

@@ -1,5 +1,7 @@
 bits 32
 
+global scancode_set_1
+
 %include "src/io/keycodes.inc"
 
 invalid_scancode  equ 0x7f
@@ -10,7 +12,6 @@ more_input        equ 0xff
 ; A state machine for scan codes from Set 1 of a PS/2 keyboard. Takes a scan
 ; code in al, returns a key code in al (if possible), 0x7f if input was
 ; invalid, or 0xff if more input is required. Trashes eax, ebx, ecx.
-global scancode_set_1
 scancode_set_1:
 	; We use a jump table to choose which state to enter.
 	xor ecx, ecx

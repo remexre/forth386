@@ -1,13 +1,16 @@
+bits 32
+
 extern brk
 extern console
 extern cursor
 extern color
 extern idt
 
+global ipb
+
 [section .ipb]
 
 ; The Important Pointer Block.
-global ipb
 ipb:
 	db 'I', 'P', 'B', 0x00
 	dd 0 ; Gets filled in with address of multiboot2 information structure.

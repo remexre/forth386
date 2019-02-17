@@ -1,9 +1,10 @@
 bits 32
 
+global gdt_init
+
 [section .text]
 
 ; Sets up the GDT. Trashes eax.
-global gdt_init
 gdt_init:
 	lgdt [gdtr]
 

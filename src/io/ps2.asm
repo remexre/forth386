@@ -4,10 +4,11 @@ extern idt_set
 extern keycode
 extern scancode_set_1
 
+global ps2_init
+
 [section .text]
 
 ; Sets up the PS/2 port to be able to receive keyboard input.
-global ps2_init
 ps2_init:
 	; Set IRQ1 handler.
 	mov eax, 0x21

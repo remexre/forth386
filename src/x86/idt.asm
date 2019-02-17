@@ -1,5 +1,9 @@
 bits 32
 
+global idt
+global idt_init
+global idt_set
+
 %include "src/debug/debug.inc"
 
 [section .text]
@@ -16,7 +20,6 @@ bits 32
 %endmacro
 
 ; Remaps the PIC and sets up the IDT. Trashes eax, edx.
-global idt_init
 idt_init:
 	; Initialize the first PIC.
 	write pic1_cmd,  0x11 ; Initializing, expect 3 more "init words" on the
@@ -57,7 +60,6 @@ idt_init:
 
 ; Sets an IDT entry. Expects the interrupt number in eax, and the handler
 ; address in ecx. Trashes ecx.
-global idt_set
 idt_set:
 	mov word [idt  +eax*8], cx
 	mov word [idt+2+eax*8], 0x0008
@@ -104,7 +106,6 @@ idtr:
 
 [section .bss]
 
-global idt
 idt: resq 48
 .end:
 

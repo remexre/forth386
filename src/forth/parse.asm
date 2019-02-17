@@ -3,33 +3,41 @@ bits 32
 extern forth_base
 extern forth_to_in
 
+global parse_string
+global set_parse_buffer
+
 [section .text]
 
 ; Parses a string out of the input buffer. Returns the length in ecx, and a
 ; pointer to the string data in edi.
-global parse_string
 parse_string:
+	mov edi, [input_buf]
 	mov ecx, [forth_to_in]
 	mov edx, ecx
-	cmp ecx, [input_len]
-	jne .skip_delims
-
-	xor ecx, ecx
-	ret
 
 .skip_delims:
-	mov al, [input_buf+ecx]
+	cmp ecx, [input_len]
+	je .zero
+
+	mov al, [edi+ecx]
 	call is_delim
 	test al, al
-	jz .accept
+	jz .check_for_comment
 
-	inc dword [forth_to_in]
-	jmp parse_string
+	inc ecx
+	jmp .skip_delims
+
+.check_for_comment:
+	mov al, [edi+ecx]
+	cmp al, '\'
+	je .skip_comment
+
+	mov edx, ecx
 
 .accept:
 	cmp ecx, [input_len]
 	je .done
-	mov al, [input_buf+ecx]
+	mov al, [edi+ecx]
 	call is_delim
 	test al, al
 	jne .done
@@ -40,8 +48,24 @@ parse_string:
 .done:
 	mov [forth_to_in], ecx
 	sub ecx, edx
-	lea edi, [input_buf+edx]
+	add edi, edx
 	ret
+
+.zero:
+	xor ecx, ecx
+	ret
+
+.skip_comment:
+	inc ecx
+
+	cmp ecx, [input_len]
+	je .zero
+
+	mov al, [edi+ecx]
+	cmp al, 0x0a
+	je .skip_delims
+
+	jmp .skip_comment
 
 ; Checks if the byte in al is a delimiter. Returns 1 in al if it is, or 0 if it
 ; is not.
@@ -66,11 +90,17 @@ is_delim:
 	pop ebx
 	ret
 
+; Sets the buffer to parse from. The buffer's address should be in edi, and its
+; length in ecx. Does not modify any registers.
+set_parse_buffer:
+	mov [input_buf], edi
+	mov [input_len], ecx
+	mov dword [forth_to_in], 0
+	ret
+
 [section .bss]
 
-global input_len
+input_buf: resd 1
 input_len: resd 1
-global input_buf
-input_buf: resb 80
 
 ; vi: cc=80 ft=nasm

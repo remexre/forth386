@@ -1,9 +1,14 @@
 bits 32
 
+global color
+global console
+global console_init
+global console_refresh
+global cursor
+
 [section .text]
 
 ; Initializes the console. Trashes eax, ecx, edx, esi, edi.
-global console_init
 console_init:
 	; Set the high scanline to 14.
 	mov dx, 0x03d4
@@ -29,7 +34,6 @@ console_init:
 
 ; Draws the console to the screen and updates the cursor. Trashes ebx, ecx,
 ; edx, edi.
-global console_refresh
 console_refresh:
 	push eax
 	push esi
@@ -68,15 +72,12 @@ console_refresh:
 
 [section .data]
 
-global console
 console:
 	db "Welcome to Forth386!"
 	times (80*25 - ($ - console)) db 0x20
 
-global cursor
 cursor: dw 80
 
-global color
 color: db 0x70
 
 ; vi: cc=80 ft=nasm

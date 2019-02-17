@@ -12,10 +12,14 @@ extern console_refresh
 extern ipb
 extern repl
 
+global halt
+global param_stack_top
+global return_stack_top
+global start
+
 [section .text]
 
 ; The entry point to the kernel.
-global start
 start:
 	; Store the address of the Multiboot2 structure.
 	mov [ipb+4], ebx
@@ -33,7 +37,6 @@ start:
 	mov esi, halt
 	jmp cold.cfa
 
-global halt
 halt:
 	call console_print_newline
 	mov ecx, 10
@@ -47,13 +50,11 @@ halt:
 
 [section .param_stack nobits]
 
-global param_stack_top
 param_stack: resb 0x100000
 param_stack_top:
 
 [section .return_stack nobits]
 
-global return_stack_top
 return_stack: resb 0x100000
 return_stack_top:
 

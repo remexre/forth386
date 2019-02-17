@@ -4,25 +4,27 @@ extern color
 extern console
 extern cursor
 
+global console_print_dec
+global console_print_hex
+global console_print_newline
+global console_print_string
+
 [section .text]
 
 ; Prints the number in eax to the console in base 10. Trashes eax, ebx, ecx,
 ; edx, edi.
-global console_print_dec
 console_print_dec:
 	int3
 	jmp console_print_dec
 
 ; Prints the number in eax to the console in base 16. Trashes eax, ebx, ecx,
 ; edx, edi.
-global console_print_hex
 console_print_hex:
 	int3
 	jmp console_print_hex
 
 ; Prints a string. The length is taken in ecx, and a pointer to the string data
 ; is taken in edi. Trashes eax, ebx, ecx, edx, edi.
-global console_print_string
 console_print_string:
 	xor eax, eax ; Index into string
 	xor edx, edx ; Index into console
@@ -50,7 +52,6 @@ console_print_string:
 	ret
 
 ; Prints a newline to the console. Trashes eax, ecx, edi.
-global console_print_newline
 console_print_newline:
 	mov cl, 80
 	xor eax, eax

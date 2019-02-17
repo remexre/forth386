@@ -1,9 +1,11 @@
 bits 32
 
+global debug_port_write_byte
+global debug_port_write_string
+
 [section .text]
 
 ; Takes in byte in al.
-global debug_port_write_byte
 debug_port_write_byte:
 	push eax
 	push ecx
@@ -31,7 +33,6 @@ debug_port_write_byte:
 	ret
 
 ; Takes in addr in eax
-global debug_port_write_string
 debug_port_write_string:
 	push eax
 	push ecx

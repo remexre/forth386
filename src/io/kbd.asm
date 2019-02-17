@@ -2,10 +2,13 @@ bits 32
 
 extern keycode_to_ascii
 
+global get_ascii
+global kbd_state
+global keycode
+
 [section .text]
 
 ; Gets an ASCII keystroke, retuning it in al. Trashes eax, ebx, ecx.
-global get_ascii
 get_ascii:
 	call update_kbd_state
 	test al, 0x80
@@ -83,11 +86,9 @@ get_keycode:
 
 [section .bss]
 
-global keycode
 keycode: resw 1
 
 ; Bitmap of keys, where 1 = down, 0 = up.
-global kbd_state
 kbd_state: resb 16
 
 ; vi: cc=80 ft=nasm
