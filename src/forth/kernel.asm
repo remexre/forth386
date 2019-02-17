@@ -320,19 +320,19 @@ forth_semicolon: ; ( -- )
 	dd forth_quit
 	db 0x01, 1, ";"
 .cfa:
-	mov dword [forth_state], 0
-	NEXT
-
-forth_state_word: ; ( -- a-addr )
-	dd forth_semicolon
-	db 0x00, 5, "STATE"
-.cfa:
 	JMP_ENTER
 .pfa:
 	; dd forth_create.cfa
 	; dd forth_docolon.cfa
 	; dd forth_brack_right.cfa
 	dd forth_exit.cfa
+
+forth_state_word: ; ( -- a-addr )
+	dd forth_semicolon
+	db 0x00, 5, "STATE"
+.cfa:
+	push dword forth_state
+	NEXT
 
 forth_store: ; ( x a-addr -- )
 	dd forth_state_word
