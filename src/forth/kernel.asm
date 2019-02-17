@@ -313,6 +313,8 @@ forth_semicolon: ; ( -- )
 .cfa:
 	JMP_ENTER
 .pfa:
+	dd forth_brack_left.cfa
+	dd forth_unsmudge.cfa
 	; dd forth_create.cfa
 	; dd forth_docolon.cfa
 	; dd forth_brack_right.cfa
@@ -365,14 +367,60 @@ forth_type: ; ( c-addr u -- )
 .cfa.end:
 	NEXT
 
-forth_zero_equal: ; ( x -- flag )
+forth_unsmudge: ; ( -- )
 	dd forth_type
+	db 0x00, 8, "UNSMUDGE"
+.cfa:
+	mov eax, [forth_dictionary]
+	and byte [eax+4], 0xfd
+	NEXT
+
+forth_words: ; ( -- )
+	dd forth_unsmudge
+	db 0x00, 5, "WORDS"
+.cfa:
+	mov eax, forth_dictionary
+	xor edx, edx
+.loop:
+	mov eax, [eax]
+	test eax, eax
+	jz .end
+	test edx, edx
+	jz .skip_space
+	push eax
+	push edx
+	mov ecx, 1
+	mov edi, .pfa
+	call console_print_string
+	pop edx
+	pop eax
+.skip_space:
+	test byte [eax+4], 0x02
+	jnz .loop
+	xor ecx, ecx
+	mov cl, [eax+5]
+	lea edi, [eax+6]
+	push eax
+	push edx
+	call console_print_string
+	pop edx
+	pop eax
+	inc edx
+	jmp .loop
+.end:
+	NEXT
+.pfa:
+	db ' '
+
+forth_zero_equal: ; ( x -- flag )
+	dd forth_words
 	db 0x00, 2, "0="
 .cfa:
 	FORTH_POP eax
 	test eax, eax
 	setnz al
-	and eax, 0xff
+	and eax, 1
+	dec eax
 	push eax
 	NEXT
 

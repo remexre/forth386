@@ -34,6 +34,8 @@ $123456 $3 TYPE CR
 \ : reasonable-taste #0f set-color ;
 
 \ reasonable-taste
+
+HEX
 ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :
