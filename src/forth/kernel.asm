@@ -3,16 +3,23 @@ bits 32
 extern console_print_newline
 extern console_print_number
 extern console_print_string
+extern console_read_line
 extern console_refresh
+extern cursor
 extern halt
 extern heap_start
+extern interpret
+extern ok
 extern param_stack_top
+extern parse_string
 extern return_stack_top
+extern underflow
 
 global enter
-global forth_abort.cfa
 global forth_base
 global forth_dictionary
+global forth_exit.cfa
+global forth_quit.cfa
 global forth_state
 global forth_to_in
 
@@ -21,14 +28,12 @@ global forth_to_in
 %include "src/forth/common.inc"
 
 enter:
-	dd forth_dup
-	db 0x00, 5, "ENTER"
 	; Push IP to the Return Stack
 	xchg ebp, esp
 	push esi
 	xchg ebp, esp
 	; Make IP point to the Parameter Field
-	lea esi, [eax+NEXT_LEN]
+	lea esi, [eax+JMP_ENTER_LEN]
 	NEXT
 
 forth_docolon:
@@ -69,7 +74,7 @@ forth_colon: ; ( C: "name" -- colon-sys )
 	dd forth_brack_right
 	db 0x00, 1, ":"
 .cfa:
-	jmp enter
+	JMP_ENTER
 .pfa:
 	dd forth_create.cfa
 	dd forth_docolon.cfa
@@ -102,7 +107,7 @@ forth_dot: ; ( n -- )
 	dd forth_decimal
 	db 0x00, 1, "."
 .cfa:
-	pop eax
+	FORTH_POP eax
 	call console_print_number
 	NEXT
 
@@ -160,6 +165,18 @@ forth_dup: ; ( x -- x x )
 	push eax
 	NEXT
 
+forth_eat_flaming_death:
+	dd forth_dup
+	db 0x00, 17, "EAT-FLAMING-DEATH"
+.cfa:
+	mov ecx, 18
+	mov edi, .pfa
+	call console_print_string
+	call console_print_newline
+	jmp halt
+.pfa:
+	db "Dying in a fire..."
+
 forth_exit: ; ( -- ) ( R: nest-sys -- )
 	dd forth_dup
 	db 0x00, 4, "EXIT"
@@ -210,11 +227,11 @@ forth_int3: ; ( c-addr u -- )
 	int3
 	NEXT
 
-forth_interpret: ; ( c-addr u -- )
+forth_interpret: ; ( -- )
 	dd forth_int3
 	db 0x02, 9, "INTERPRET"
 .cfa:
-	jmp halt ; TODO
+	jmp interpret
 
 forth_minus: ; ( a b -- a-b )
 	dd forth_interpret
@@ -226,6 +243,15 @@ forth_minus: ; ( a b -- a-b )
 	push eax
 	NEXT
 
+forth_parse_string: ; ( -- c-addr u )
+	dd forth_minus
+	db 0x00, 12, "PARSE-STRING"
+.cfa:
+	call parse_string
+	push ecx
+	push edi
+	NEXT
+
 forth_plus: ; ( a b -- a+b )
 	dd forth_minus
 	db 0x00, 1, "+"
@@ -234,6 +260,13 @@ forth_plus: ; ( a b -- a+b )
 	pop eax
 	add eax, ecx
 	push eax
+	NEXT
+
+forth_read_line: ; ( -- )
+	dd forth_plus
+	db 0x00, 9, "READ-LINE"
+.cfa:
+	call console_read_line
 	NEXT
 
 forth_refresh: ; ( -- )
@@ -249,11 +282,32 @@ forth_quit: ; ( R: x* -- )
 .cfa:
 	mov ebp, return_stack_top
 	mov dword [forth_state], 0
-.eat_flaming_death:
-	int3
-	cli
-	hlt
-	jmp .eat_flaming_death
+	mov eax, .enter
+	jmp .enter
+.print_ok:
+	cmp byte [ok], 0
+	je .skip_ok
+	mov edx, 80
+	mov ax, [cursor]
+	div dl
+	test ah, ah
+	jz .skip_nl
+	call console_print_newline
+.skip_nl:
+	mov ecx, 2
+	mov edi, .ok
+	call console_print_string
+	call console_print_newline
+.skip_ok:
+	NEXT
+.ok: db "ok"
+.enter:
+	JMP_ENTER
+.pfa:
+	dd forth_read_line.cfa
+	dd forth_interpret.cfa
+	dd forth_quit.print_ok
+	dd forth_quit.cfa
 
 forth_state_word: ; ( -- a-addr )
 	dd forth_quit
@@ -301,10 +355,21 @@ forth_type: ; ( c-addr u -- )
 .cfa.end:
 	NEXT
 
+forth_zero_equal: ; ( x -- flag )
+	dd forth_type
+	db 0x00, 2, "0="
+.cfa:
+	pop eax
+	test eax, eax
+	setnz al
+	and eax, 0xff
+	push eax
+	NEXT
+
 [section .data]
 
 forth_base: dd 10
-forth_dictionary: dd forth_type
+forth_dictionary: dd forth_zero_equal
 forth_heap: dd heap_start
 forth_state: dd 0
 forth_to_in: dd 0

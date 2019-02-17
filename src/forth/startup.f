@@ -1,10 +1,6 @@
 $123456 $3 TYPE CR REFRESH
-$123456 @ $00425046 - $123456 SWAP .S TYPE CR REFRESH .S
-1 2 3 .S
-0 .S
 
 \ : CRR CR REFRESH ;
-
 \ : NIP SWAP DROP ;
 \ : OVER >R DUP R> SWAP ;
 \ : 2DUP OVER OVER ;
@@ -32,6 +28,6 @@ $123456 @ $00425046 - $123456 SWAP .S TYPE CR REFRESH .S
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
-\ ABORT
+ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

@@ -2,6 +2,7 @@ bits 32
 
 extern console
 extern cursor
+extern console_print_newline
 extern console_print_string
 extern console_refresh
 extern get_ascii
@@ -77,7 +78,8 @@ console_read_line:
 	sub ecx, 80*24+2
 	mov edi, console+80*24+2
 	call set_parse_buffer
-	jmp console_print_string
+	call console_print_string
+	jmp console_print_newline
 
 [section .bss]
 

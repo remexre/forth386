@@ -1,12 +1,16 @@
 bits 32
 
+extern console_print_newline
+extern console_print_string
 extern forth_base
 extern forth_dictionary
+extern forth_quit.cfa
 
 global capitalize
 global find
 global is_number
 global parse_number
+global underflow
 
 [section .text]
 
@@ -185,6 +189,15 @@ parse_number:
 	mov dword [forth_base], 2
 	xor edx, edx
 	jmp .loop_next
+
+; The stack underflow handler.
+underflow:
+	mov edi, .str
+	mov ecx, 16
+	call console_print_string
+	call console_print_newline
+	jmp forth_quit.cfa
+.str: db "Stack underflow!"
 
 [section .bss]
 

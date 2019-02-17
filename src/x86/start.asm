@@ -5,7 +5,7 @@ extern gdt_init
 extern idt_init
 extern ps2_init
 
-extern cold.cfa
+extern cold
 extern console_print_string
 extern console_print_newline
 extern console_refresh
@@ -35,10 +35,9 @@ start:
 	call ps2_init
 
 	mov esi, halt
-	jmp cold.cfa
+	jmp cold
 
 halt:
-	call console_print_newline
 	mov ecx, 10
 	mov edi, .str
 	call console_print_string

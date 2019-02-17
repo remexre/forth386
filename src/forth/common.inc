@@ -24,12 +24,22 @@
 ;
 ; all others are reserved.
 
+%macro FORTH_POP 1
+	cmp esp, param_stack_top
+	jae underflow
+	pop dword %1
+%endmacro
+
+%macro JMP_ENTER 0
+	jmp enter
+%endmacro
+
 %macro NEXT 0
 	lodsd
 	jmp eax
 %endmacro
 
-; TODO: Is this even what we want?
-NEXT_LEN equ 3
+; TODO: This implies that the jmp to enter must be of the 0xe9 variety.
+JMP_ENTER_LEN equ 5
 
 ; vi: cc=80 ft=nasm
