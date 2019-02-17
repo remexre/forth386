@@ -7,10 +7,13 @@ extern forth_dictionary
 extern forth_quit.cfa
 
 global capitalize
+global enter
 global find
 global is_number
 global parse_number
 global underflow
+
+%include "src/forth/common.inc"
 
 [section .text]
 
@@ -36,6 +39,15 @@ capitalize:
 
 .done:
 	ret
+
+enter:
+	; Push IP to the Return Stack
+	xchg ebp, esp
+	push esi
+	xchg ebp, esp
+	; Make IP point to the Parameter Field
+	lea esi, [eax+JMP_ENTER_LEN]
+	NEXT
 
 ; Finds the non-smudged word with the given name. The length of the string to
 ; find should be in ecx, and a pointer to its data should be in edi. Returns

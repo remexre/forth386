@@ -7,6 +7,7 @@ extern console_print_string
 extern console_read_line
 extern console_refresh
 extern cursor
+extern enter
 extern halt
 extern heap_start
 extern interpret
@@ -16,7 +17,6 @@ extern parse_string
 extern return_stack_top
 extern underflow
 
-global enter
 global forth_base
 global forth_dictionary
 global forth_eat_flaming_death.cfa
@@ -25,18 +25,9 @@ global forth_quit.cfa
 global forth_state
 global forth_to_in
 
-[section .forth]
-
 %include "src/forth/common.inc"
 
-enter:
-	; Push IP to the Return Stack
-	xchg ebp, esp
-	push esi
-	xchg ebp, esp
-	; Make IP point to the Parameter Field
-	lea esi, [eax+JMP_ENTER_LEN]
-	NEXT
+[section .forth]
 
 forth_docolon:
 .cfa:
