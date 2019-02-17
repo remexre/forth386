@@ -5,6 +5,8 @@ extern console_print_hex
 extern console_print_string
 extern console_refresh
 extern heap_start
+extern param_stack_top
+extern return_stack_top
 
 [section .forth]
 
@@ -34,6 +36,12 @@ docon:
 	push eax
 	NEXT
 docon_len equ $ - docon
+
+global forth_abort.cfa
+forth_abort:
+.cfa:
+	mov esp, param_stack_top
+	NEXT
 
 forth_brack_left: ; ( -- )
 	dd 0

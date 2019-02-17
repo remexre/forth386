@@ -5,6 +5,9 @@ extern gdt_init
 extern idt_init
 extern ps2_init
 
+extern console_print_string
+extern console_print_newline
+extern console_refresh
 extern ipb
 extern repl
 
@@ -26,7 +29,18 @@ start:
 	call console_init
 	call ps2_init
 
-	jmp repl
+	mov esi, .halt
+
+.halt:
+	call console_print_newline
+	mov ecx, 10
+	mov edi, .halt_str
+	call console_print_string
+	call console_print_newline
+	call console_refresh
+	cli
+	hlt
+.halt_str: db "Halting..."
 
 [section .param_stack nobits]
 

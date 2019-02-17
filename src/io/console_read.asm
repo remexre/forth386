@@ -2,29 +2,25 @@ bits 32
 
 extern console
 extern cursor
-extern console_print_newline
 extern console_print_string
 extern console_refresh
-extern forth_cold.cfa
 extern get_ascii
 extern parsed_string.len
 extern parsed_string.ptr
 
 [section .text]
 
-; The REPL's entry point.
-global repl
-repl:
-	mov esi, forth_cold.cfa
-	lodsb
-	jmp eax
-
 ; Reads a line.
-read_line:
+global console_read_line
+console_read_line:
 	mov dx, [cursor]
+	cmp dx, 80*24
+	jb .skip_cursor_reset
+	xor dx, dx
+.skip_cursor_reset:
 	mov [out_cursor], dx
 
-	mov word [console+80*24], '>'
+	mov word [console+80*24], 0x10
 	mov word [cursor], 80*24+2
 	xor eax, eax
 	mov ecx, 79
@@ -82,22 +78,11 @@ read_line:
 	mov [parsed_string.len], ecx
 	mov [parsed_string.ptr], edi
 
+	mov word [console+80*24], 0x11
 	jmp console_print_string
-
-; The handler for the Pause/Break key. When that key is pressed, this function
-; is jumped to.
-global brk
-brk:
-	int3
-	jmp repl
 
 [section .bss]
 
 out_cursor: resw 1
-
-[section .rodata]
-
-strs:
-.ok: db " ok"
 
 ; vi: cc=80 ft=nasm

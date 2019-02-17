@@ -15,6 +15,5 @@ ipb:
 	dd cursor
 	dd color
 	dd idt
-	dd brk
 
 ; vi: cc=80 ft=nasm

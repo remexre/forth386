@@ -5,16 +5,15 @@ QEMUFLAGS += -m 64M
 
 UNITS += debug/debug_port
 UNITS += forth/kernel
-UNITS += forth/repl
 UNITS += io/ascii
-UNITS += io/console_high
+UNITS += io/console_read
 UNITS += io/console_low
+UNITS += io/console_write
 UNITS += io/kbd
 UNITS += io/ps2
 UNITS += io/scancode_set_1
 UNITS += ipb
 UNITS += parse
-UNITS += repl
 UNITS += x86/gdt
 UNITS += x86/idt
 UNITS += x86/multiboot2
@@ -43,11 +42,11 @@ watch:
 
 out/forth386.img: out/forth386.elf src/misc/grub.cfg
 	@grub-file --is-x86-multiboot2 out/forth386.elf
-	@mkdir -p .isodir/boot/grub
-	cp out/forth386.elf .isodir/boot/forth386.elf
-	cp src/misc/grub.cfg .isodir/boot/grub/grub.cfg
+	@mkdir -p tmp/isodir/boot/grub
+	cp out/forth386.elf tmp/isodir/boot/forth386.elf
+	cp src/misc/grub.cfg tmp/isodir/boot/grub/grub.cfg
 	@mkdir -p $(dir $@)
-	grub-mkrescue -o $@ .isodir
+	grub-mkrescue -o $@ tmp/isodir
 
 out/forth386.elf out/forth386.sym: out/forth386-unstripped.elf
 	@mkdir -p $(dir $@)
