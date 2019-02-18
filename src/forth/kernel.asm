@@ -289,8 +289,27 @@ forth_inb: ; ( u -- c )
 	push eax
 	NEXT
 
-forth_int3: ; ( c-addr u -- )
+forth_inw: ; ( u -- w )
 	dd forth_inb
+	db 0x00, 3, "INW"
+.cfa:
+	FORTH_POP edx
+	xor eax, eax
+	in ax, dx
+	push eax
+	NEXT
+
+forth_ind: ; ( u -- u )
+	dd forth_inw
+	db 0x00, 3, "IND"
+.cfa:
+	FORTH_POP edx
+	in eax, dx
+	push eax
+	NEXT
+
+forth_int3: ; ( c-addr u -- )
+	dd forth_ind
 	db 0x00, 4, "INT3"
 .cfa:
 	int3
@@ -332,8 +351,26 @@ forth_outb: ; ( c u -- )
 	out dx, al
 	NEXT
 
-forth_paren_left:
+forth_outw: ; ( w u -- )
 	dd forth_outb
+	db 0x00, 4, "OUTW"
+.cfa:
+	FORTH_POP edx
+	FORTH_POP eax
+	out dx, ax
+	NEXT
+
+forth_outd: ; ( u u -- )
+	dd forth_outw
+	db 0x00, 4, "OUTD"
+.cfa:
+	FORTH_POP edx
+	FORTH_POP eax
+	out dx, eax
+	NEXT
+
+forth_paren_left:
+	dd forth_outd
 	db 0x01, 1, "("
 .cfa:
 	or dword [forth_state], 0x02
