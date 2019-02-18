@@ -31,6 +31,7 @@
 
 %macro FORTH_POP_CHK 1
 	cmp esp, param_stack_top-(4*%1)
+	extern underflow
 	ja underflow
 %endmacro
 

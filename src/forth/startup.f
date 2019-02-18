@@ -1,8 +1,8 @@
 \ : CRR CR REFRESH ;
 $123456 $3 TYPE CR
 
-1 2 3
-: NIP SWAP DROP ;
+\ : NIP SWAP DROP ;
+
 \ : OVER >R DUP R> SWAP ;
 \ : 2DUP OVER OVER ;
 

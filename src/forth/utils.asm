@@ -10,10 +10,22 @@ global capitalize
 global enter
 global find
 global is_number
+global missing_name
 global parse_number
 global underflow
 
 %include "src/forth/common.inc"
+
+[section .enter]
+
+enter:
+	; Push IP to the Return Stack
+	xchg ebp, esp
+	push esi
+	xchg ebp, esp
+	; Make IP point to the Parameter Field
+	lea esi, [eax+JMP_ENTER_LEN]
+	NEXT
 
 [section .text]
 
@@ -39,15 +51,6 @@ capitalize:
 
 .done:
 	ret
-
-enter:
-	; Push IP to the Return Stack
-	xchg ebp, esp
-	push esi
-	xchg ebp, esp
-	; Make IP point to the Parameter Field
-	lea esi, [eax+JMP_ENTER_LEN]
-	NEXT
 
 ; Finds the non-smudged word with the given name. The length of the string to
 ; find should be in ecx, and a pointer to its data should be in edi. Returns
@@ -201,6 +204,15 @@ parse_number:
 	mov dword [forth_base], 2
 	xor edx, edx
 	jmp .loop_next
+
+; The handler for a missing name.
+missing_name:
+	mov edi, .str
+	mov ecx, 13
+	call console_print_string
+	call console_print_newline
+	jmp forth_quit.cfa
+.str: db "Missing name!"
 
 ; The stack underflow handler.
 underflow:

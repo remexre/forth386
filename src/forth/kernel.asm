@@ -11,11 +11,11 @@ extern enter
 extern halt
 extern heap_start
 extern interpret
+extern missing_name
 extern ok
 extern param_stack_top
 extern parse_string
 extern return_stack_top
-extern underflow
 
 global forth_base
 global forth_dictionary
@@ -29,19 +29,23 @@ global forth_to_in
 
 [section .forth]
 
-forth_docolon:
-.cfa:
-	jmp forth_eat_flaming_death.cfa ; TODO
-
-forth_abort: ; ( x* -- )
+forth_abort: ; ( i * x -- )
 	dd 0
 	db 0x00, 5, "ABORT"
 .cfa:
 	mov esp, param_stack_top
 	jmp forth_quit.cfa
 
-forth_brack_left: ; ( -- )
+forth_allot : ; ( n -- )
 	dd forth_abort
+	db 0x00, 5, "ALLOT"
+.cfa:
+	pop eax
+	add [forth_heap], eax
+	NEXT
+
+forth_brack_left: ; ( -- )
+	dd forth_allot
 	db 0x01, 1, "["
 .cfa:
 	mov dword [forth_state], 0
@@ -80,8 +84,8 @@ forth_colon: ; ( C: "name" -- colon-sys )
 	JMP_ENTER
 .pfa:
 	dd forth_create.cfa
-	; dd forth_docolon.cfa
-	; dd forth_brack_right.cfa
+	dd forth_does_enter.cfa
+	dd forth_brack_right.cfa
 	dd forth_exit.cfa
 
 forth_cr: ; ( -- a-addr )
@@ -96,8 +100,26 @@ forth_create: ; ( -- a-addr )
 	db 0x00, 6, "CREATE"
 .cfa:
 	call parse_string
-	int3 ; TODO
-	push dword 0xb8000
+	and ecx, 0xff ; This is a bit of a hack...
+	jz missing_name
+
+	mov edx, [forth_heap]
+	add [forth_heap], ecx
+	add dword [forth_heap], 6
+
+	mov eax, [forth_dictionary]
+	mov [edx], eax
+	mov [forth_dictionary], edx
+
+	mov byte [edx+4], 0x02
+	mov [edx+5], cl
+	push esi
+	mov esi, edi
+	add edx, 6
+	mov edi, edx
+	rep movsb
+	pop esi
+	push edx
 	NEXT
 
 forth_decimal: ; ( -- )
@@ -107,8 +129,23 @@ forth_decimal: ; ( -- )
 	mov dword [forth_base], 10
 	NEXT
 
-forth_dot: ; ( n -- )
+forth_does_enter: ; ( c-addr -- )
 	dd forth_decimal
+	db 0x00, 10, "DOES>ENTER"
+.cfa:
+	FORTH_POP eax
+	mov byte [eax], 0xe9
+	inc eax
+	mov ecx, enter
+	sub ecx, eax
+	sub ecx, 4
+	mov [eax], ecx
+	add eax, 4
+	mov [forth_heap], eax
+	NEXT
+
+forth_dot: ; ( n -- )
+	dd forth_does_enter
 	db 0x00, 1, "."
 .cfa:
 	FORTH_POP eax
@@ -212,8 +249,16 @@ forth_from_r: ; ( -- x ) ( R: x -- )
 	push eax
 	NEXT
 
-forth_hex: ; ( -- )
+forth_here: ; ( -- c-addr )
 	dd forth_from_r
+	db 0x00, 4, "HERE"
+.cfa:
+	mov eax, [forth_heap]
+	push eax
+	NEXT
+
+forth_hex: ; ( -- )
+	dd forth_here
 	db 0x00, 3, "HEX"
 .cfa:
 	mov dword [forth_base], 16
@@ -315,10 +360,17 @@ forth_semicolon: ; ( -- )
 .pfa:
 	dd forth_brack_left.cfa
 	dd forth_unsmudge.cfa
-	; dd forth_create.cfa
-	; dd forth_docolon.cfa
-	; dd forth_brack_right.cfa
+	dd .align_heap
 	dd forth_exit.cfa
+.align_heap:
+	mov edx, [forth_heap]
+	test dl, 0x3
+	jz .align_heap_done
+	add edx, 0x04
+	and dl, 0xfc
+	mov [forth_heap], edx
+.align_heap_done:
+	NEXT
 
 forth_state_word: ; ( -- a-addr )
 	dd forth_semicolon
@@ -373,6 +425,7 @@ forth_unsmudge: ; ( -- )
 .cfa:
 	mov eax, [forth_dictionary]
 	and byte [eax+4], 0xfd
+	int3
 	NEXT
 
 forth_words: ; ( -- )

@@ -8,6 +8,7 @@ SECTIONS {
 	}
 	.forth386 : {
 		*(.text)
+		*(.enter)
 		*(.forth)
 		*(.data)
 		*(.rodata)
