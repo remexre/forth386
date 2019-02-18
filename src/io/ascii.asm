@@ -11,6 +11,7 @@ global keycode_to_ascii
 keycode_to_ascii:
 	and al, 0x7f
 
+	; Check for Shift
 	mov cx, [kbd_state+2]
 	test cx, 0x0801
 	jz .skip_shift

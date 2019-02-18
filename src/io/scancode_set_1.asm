@@ -1,5 +1,7 @@
 bits 32
 
+extern kbd_state
+
 global scancode_set_1
 
 %include "src/io/keycodes.inc"
@@ -14,6 +16,7 @@ more_input        equ 0xff
 ; invalid, or 0xff if more input is required. Trashes eax, ebx, ecx.
 scancode_set_1:
 	; We use a jump table to choose which state to enter.
+	and eax, 0xff
 	xor ecx, ecx
 	mov cl, [state]
 	mov ecx, [state_jumps+ecx*4]
@@ -23,7 +26,6 @@ scancode_set_1:
 	; use a table to determine which key to use, since keys are extremely dense
 	; here.
 .state0:
-	and eax, 0xff
 	mov cl, al
 	mov ebx, state0_jumps
 	xlatb
@@ -38,7 +40,33 @@ scancode_set_1:
 
 	; This is the state after reading 0xe0.
 .state1:
-	jmp .todo
+	mov ebx, state1_jumps
+	xlatb
+	cmp al, invalid_scancode
+	je .state1_invalid_scancode
+	cmp al, more_input
+	je .state1_more_input
+	cmp al, key_delete_down
+	je .state1_del
+	ret
+.state1_invalid_scancode:
+	mov byte [state], 0
+	ret
+.state1_more_input:
+	int3
+	jmp $
+.state1_del:
+	; If control and alt are also down, call ctrl_alt_delete.
+	mov cl, [kbd_state]
+	test cl, 0x82
+	setnz ch
+	test cl, 0x28
+	setnz cl
+	cmp cx, 0x0101
+	je ctrl_alt_delete
+	int3
+	; Otherwise continue happily along.
+	ret
 
 	; This is the state after reading 0xe1.
 .state2:
@@ -48,6 +76,17 @@ scancode_set_1:
 	mov byte [state], 0x00
 	mov al, 0x7f
 	ret
+
+ctrl_alt_delete:
+	cli
+	pause
+	in al, 0x64
+	test al, 0x20
+	jnz ctrl_alt_delete
+	mov al, 0xfe
+	out 0x64, al
+	hlt
+	jmp ctrl_alt_delete
 
 [section .bss]
 
@@ -153,6 +192,90 @@ state0_jumps:
 	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
 %if ($-state0_jumps) != 256
 %error "Bad State0 jump table"
+%endif
+
+state1_jumps:
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, key_delete_down
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+	db invalid_scancode, invalid_scancode, invalid_scancode, invalid_scancode
+%if ($-state1_jumps) != 256
+%error "Bad State1 jump table"
 %endif
 
 ; vi: cc=80 ft=nasm
