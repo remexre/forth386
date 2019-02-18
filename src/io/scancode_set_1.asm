@@ -1,5 +1,6 @@
 bits 32
 
+extern ctrl_alt_delete
 extern kbd_state
 
 global scancode_set_1
@@ -76,17 +77,6 @@ scancode_set_1:
 	mov byte [state], 0x00
 	mov al, 0x7f
 	ret
-
-ctrl_alt_delete:
-	cli
-	pause
-	in al, 0x64
-	test al, 0x20
-	jnz ctrl_alt_delete
-	mov al, 0xfe
-	out 0x64, al
-	hlt
-	jmp ctrl_alt_delete
 
 [section .bss]
 

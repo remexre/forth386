@@ -5,6 +5,7 @@ extern interpret
 extern set_parse_buffer
 
 global cold
+global ctrl_alt_delete
 
 [section .text]
 
@@ -16,6 +17,23 @@ cold:
 	mov esi, .addr_of_flaming_death
 	jmp interpret
 .addr_of_flaming_death: dd forth_eat_flaming_death.cfa
+
+; The break handler.
+brk:
+	; TODO: This should probably be somewhat more elaborate.
+	jmp cold
+
+; The ctrl-alt-delete handler.
+ctrl_alt_delete:
+	cli
+	pause
+	in al, 0x64
+	test al, 0x20
+	jnz ctrl_alt_delete
+	mov al, 0xfe
+	out 0x64, al
+	hlt
+	jmp ctrl_alt_delete
 
 [section .startup]
 

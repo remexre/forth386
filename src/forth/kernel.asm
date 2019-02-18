@@ -272,8 +272,18 @@ forth_immediate: ; ( -- )
 	or byte [eax+4], 0x01
 	NEXT
 
-forth_int3: ; ( c-addr u -- )
+forth_inb: ; ( u -- c )
 	dd forth_immediate
+	db 0x00, 3, "INB"
+.cfa:
+	FORTH_POP edx
+	xor eax, eax
+	in al, dx
+	push eax
+	NEXT
+
+forth_int3: ; ( c-addr u -- )
+	dd forth_inb
 	db 0x00, 4, "INT3"
 .cfa:
 	int3
@@ -295,8 +305,17 @@ forth_minus: ; ( a b -- a-b )
 	push eax
 	NEXT
 
-forth_paren_left:
+forth_outb: ; ( c u -- )
 	dd forth_minus
+	db 0x00, 4, "OUTB"
+.cfa:
+	FORTH_POP edx
+	FORTH_POP eax
+	out dx, al
+	NEXT
+
+forth_paren_left:
+	dd forth_outb
 	db 0x01, 1, "("
 .cfa:
 	or dword [forth_state], 0x02
