@@ -9,6 +9,7 @@ extern console_read_line
 extern console_refresh
 extern cursor
 extern enter
+extern find
 extern halt
 extern heap_start
 extern interpret
@@ -18,10 +19,10 @@ extern ok
 extern param_stack_top
 extern parse_string
 extern return_stack_top
+extern word_not_found
 
 global forth_base
 global forth_dictionary
-global forth_eat_flaming_death.cfa
 global forth_exit.cfa
 global forth_heap
 global forth_quit.cfa
@@ -61,8 +62,19 @@ forth_brack_right: ; ( -- )
 	mov dword [forth_state], 1
 	NEXT
 
-forth_char_fetch: ; ( c-addr -- char )
+forth_char_comma: ; ( c -- )
 	dd forth_brack_right
+	db 0x00, 2, "C,"
+.cfa:
+	FORTH_POP eax
+	mov edx, [forth_heap]
+	mov [edx], al
+	inc edx
+	mov [forth_heap], edx
+	NEXT
+
+forth_char_fetch: ; ( c-addr -- char )
+	dd forth_char_comma
 	db 0x00, 2, "C@"
 .cfa:
 	FORTH_POP eax
@@ -91,8 +103,19 @@ forth_colon: ; ( C: "name" -- colon-sys )
 	dd forth_brack_right.cfa
 	dd forth_exit.cfa
 
-forth_cr: ; ( -- a-addr )
+forth_comma: ; ( n -- )
 	dd forth_colon
+	db 0x00, 1, ","
+.cfa:
+	FORTH_POP eax
+	mov edx, [forth_heap]
+	mov [edx], eax
+	add edx, 4
+	mov [forth_heap], edx
+	NEXT
+
+forth_cr: ; ( -- a-addr )
+	dd forth_comma
 	db 0x00, 2, "CR"
 .cfa:
 	call console_print_newline
@@ -214,21 +237,19 @@ forth_dup: ; ( x -- x x )
 	push eax
 	NEXT
 
-forth_eat_flaming_death:
+forth_execute: ; ( i * x xt -- j * x )
 	dd forth_dup
-	db 0x00, 17, "EAT-FLAMING-DEATH"
+	db 0x00, 7, "EXECUTE"
 .cfa:
-	mov ecx, 18
-	mov edi, .pfa
-	call console_print_string
-	call console_print_newline
-	mov byte [color], 0x4e
-	jmp halt
-.pfa:
-	db "Dying in a fire..."
+	int3
+	FORTH_POP eax
+	xor ecx, ecx
+	mov cl, [eax+5]
+	lea eax, [eax+6+ecx]
+	jmp eax
 
 forth_exit: ; ( -- ) ( R: nest-sys -- )
-	dd forth_dup
+	dd forth_execute
 	db 0x00, 4, "EXIT"
 .cfa:
 	; Pop the previously pushed IP from the Return Stack
@@ -271,9 +292,21 @@ forth_hex: ; ( -- )
 	mov dword [forth_base], 16
 	NEXT
 
-forth_immediate: ; ( -- )
+forth_if_impl:
 	dd forth_hex
-	db 0x00, 9, "IMMEDIATE"
+	db 0x00, 4, "[IF]"
+.cfa:
+	FORTH_POP eax
+	test eax, eax
+	lodsd
+	jnz .not_taken
+	jmp eax
+.not_taken:
+	NEXT
+
+forth_immediate: ; ( -- )
+	dd forth_if_impl
+	db 0x01, 9, "IMMEDIATE"
 .cfa:
 	mov eax, [forth_dictionary]
 	or byte [eax+4], 0x01
@@ -317,7 +350,7 @@ forth_int3: ; ( c-addr u -- )
 
 forth_interpret: ; ( -- )
 	dd forth_int3
-	db 0x02, 9, "INTERPRET"
+	db 0x00, 9, "INTERPRET"
 .cfa:
 	jmp interpret
 
@@ -386,8 +419,41 @@ forth_plus: ; ( a b -- a+b )
 	push eax
 	NEXT
 
-forth_refresh: ; ( -- )
+forth_quote: ; ( "name" -- xt )
 	dd forth_plus
+	db 0x00, 1, "'"
+.cfa:
+	call parse_string
+	test ecx, ecx
+	jz missing_name
+	call capitalize
+	call find
+	test eax, eax
+	jz word_not_found
+	push eax
+	NEXT
+
+forth_recurse: ; ( -- )
+	dd forth_quote
+	db 0x01, 7, "RECURSE"
+.cfa:
+	xor ecx, ecx
+	mov eax, [forth_dictionary]
+	mov cl, [eax+5]
+	lea eax, [eax+ecx+6+JMP_ENTER_LEN]
+
+	mov edx, [forth_heap]
+	mov byte [edx+4], 0xbe
+	mov [edx+5], eax
+	mov word [edx+9], 0xffad
+	mov byte [edx+11], 0xe0
+	lea eax, [edx+4]
+	mov [edx], eax
+	add dword [forth_heap], 12
+	NEXT
+
+forth_refresh: ; ( -- )
+	dd forth_recurse
 	db 0x00, 7, "REFRESH"
 .cfa:
 	call console_refresh
@@ -428,10 +494,10 @@ forth_quit: ; ( R: x* -- )
 
 forth_s_quote: ; ( -- c-addr u )
 	dd forth_quit
-	db 0x00, 2, 'S"'
+	db 0x01, 2, 'S"'
 .cfa:
 	call parse_string
-	push ebx
+	push edi
 	push ecx
 .loop:
 	test ecx, ecx
@@ -447,7 +513,36 @@ forth_s_quote: ; ( -- c-addr u )
 
 	push .loop
 	jmp parse_string
+
 .end:
+	mov [esp], ecx
+	mov eax, [forth_state]
+	test eax, eax
+	jnz .compile
+	NEXT
+
+.compile:
+	mov edi, [forth_heap]
+	mov dword [edi], forth_s_quote_impl.cfa
+	mov byte [edi+4], cl
+	add edi, 5
+	add esp, 4
+	xchg esi, [esp]
+	rep movsb
+	pop esi
+	mov [forth_heap], edi
+	NEXT
+
+forth_s_quote_impl: ; ( -- c-addr u )
+	dd forth_s_quote
+	db 0x00, 4, '[S"]'
+.cfa:
+	xor ecx, ecx
+	lodsb
+	mov cl, al
+	push esi
+	push ecx
+	add esi, ecx
 	NEXT
 
 forth_semicolon: ; ( -- )

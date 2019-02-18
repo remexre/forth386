@@ -1,7 +1,7 @@
 bits 32
 
-extern forth_eat_flaming_death.cfa
 extern interpret
+extern panic
 extern set_parse_buffer
 
 global cold
@@ -14,9 +14,9 @@ cold:
 	mov ecx, startup_len
 	mov edi, startup
 	call set_parse_buffer
-	mov esi, .addr_of_flaming_death
+	mov esi, .addr_of_panic
 	jmp interpret
-.addr_of_flaming_death: dd forth_eat_flaming_death.cfa
+.addr_of_panic: dd panic
 
 ; The break handler.
 brk:

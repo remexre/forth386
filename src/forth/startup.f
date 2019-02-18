@@ -34,6 +34,15 @@
 : reasonable-taste $0f set-color ;
 reasonable-taste
 
+\ : if s" [IF]" find compile, here .s ; immediate
+\ : then here swap ! ;
+
+\ : test dup 0= if s" zero!" type then . ;
+
+: crr cr refresh ;
+: loop-body 4 + dup . crr int3 recurse ;
+: loop 0 loop-body ;
+
 HEX
 ABORT
 

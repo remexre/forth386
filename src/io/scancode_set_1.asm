@@ -65,7 +65,6 @@ scancode_set_1:
 	setnz cl
 	cmp cx, 0x0101
 	je ctrl_alt_delete
-	int3
 	; Otherwise continue happily along.
 	ret
 

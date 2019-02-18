@@ -13,6 +13,7 @@ extern lit
 extern parse_number
 extern parse_string
 extern set_parse_buffer
+extern word_not_found
 
 global interpret
 global ok
@@ -107,16 +108,7 @@ interpret:
 	jmp forth_exit.cfa
 
 .word_not_found:
-	push ecx
-	push edi
-	mov ecx, word_not_found_len
-	mov edi, word_not_found
-	call console_print_string
-	pop edi
-	pop ecx
-	call console_print_string
-	call console_print_newline
-	call console_refresh
+	call word_not_found
 	mov byte [ok], 0
 	jmp .done
 
@@ -127,8 +119,5 @@ ok: resb 1
 [section .rodata]
 
 addr_of_loop: dd interpret.loop
-
-word_not_found: db "Word not found: "
-word_not_found_len equ $-word_not_found
 
 ; vi: cc=80 ft=nasm

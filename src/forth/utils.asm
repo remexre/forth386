@@ -1,7 +1,9 @@
 bits 32
 
+extern color
 extern console_print_newline
 extern console_print_string
+extern console_refresh
 extern forth_base
 extern forth_dictionary
 extern forth_quit.cfa
@@ -13,8 +15,10 @@ global find
 global is_number
 global lit
 global missing_name
+global panic
 global parse_number
 global underflow
+global word_not_found
 
 %include "src/forth/common.inc"
 
@@ -222,6 +226,20 @@ missing_name:
 	jmp forth_quit.cfa
 .str: db "Missing name!"
 
+; The handler for something going very wrong.
+panic:
+	mov edi, .str
+	mov ecx, 35
+	call console_print_string
+	call console_print_newline
+	mov byte [color], 0x4e
+	call console_refresh
+.loop:
+	int3
+	hlt
+	jmp .loop
+.str: db "Everything's gone horribly wrong..."
+
 ; The stack underflow handler.
 underflow:
 	mov edi, .str
@@ -230,6 +248,21 @@ underflow:
 	call console_print_newline
 	jmp forth_quit.cfa
 .str: db "Stack underflow!"
+
+; The word-not-found handler.
+word_not_found:
+	push ecx
+	push edi
+	mov edi, .str
+	mov ecx, 16
+	call console_print_string
+	pop edi
+	pop ecx
+	call console_print_string
+	call console_print_newline
+	call console_refresh
+	ret
+.str: db "Word not found: "
 
 [section .bss]
 
