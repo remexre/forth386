@@ -1,5 +1,6 @@
 bits 32
 
+extern capitalize
 extern color
 extern console_print_newline
 extern console_print_number
@@ -11,6 +12,7 @@ extern enter
 extern halt
 extern heap_start
 extern interpret
+extern lit
 extern missing_name
 extern ok
 extern param_stack_top
@@ -21,6 +23,7 @@ global forth_base
 global forth_dictionary
 global forth_eat_flaming_death.cfa
 global forth_exit.cfa
+global forth_heap
 global forth_quit.cfa
 global forth_state
 global forth_to_in
@@ -100,12 +103,12 @@ forth_create: ; ( -- a-addr )
 	db 0x00, 6, "CREATE"
 .cfa:
 	call parse_string
+	call capitalize
 	and ecx, 0xff ; This is a bit of a hack...
 	jz missing_name
 
 	mov edx, [forth_heap]
 	add [forth_heap], ecx
-	add dword [forth_heap], 6
 
 	mov eax, [forth_dictionary]
 	mov [edx], eax
@@ -113,12 +116,16 @@ forth_create: ; ( -- a-addr )
 
 	mov byte [edx+4], 0x02
 	mov [edx+5], cl
+	add edx, 6
+
 	push esi
 	mov esi, edi
-	add edx, 6
 	mov edi, edx
+	add edx, ecx
 	rep movsb
 	pop esi
+
+	mov [forth_heap], edx
 	push edx
 	NEXT
 
@@ -305,8 +312,19 @@ forth_minus: ; ( a b -- a-b )
 	push eax
 	NEXT
 
-forth_outb: ; ( c u -- )
+forth_literal: ; ( n -- )
 	dd forth_minus
+	db 0x01, 7, "LITERAL"
+.cfa:
+	FORTH_POP eax
+	mov edx, [forth_heap]
+	mov dword [edx], lit
+	mov [edx+4], eax
+	add dword [forth_heap], 8
+	NEXT
+
+forth_outb: ; ( c u -- )
+	dd forth_literal
 	db 0x00, 4, "OUTB"
 .cfa:
 	FORTH_POP edx
@@ -371,23 +389,54 @@ forth_quit: ; ( R: x* -- )
 	dd forth_quit.print_ok
 	dd forth_quit.cfa
 
-forth_semicolon: ; ( -- )
+forth_s_quote: ; ( -- c-addr u )
 	dd forth_quit
+	db 0x00, 2, 'S"'
+.cfa:
+	call parse_string
+	push ebx
+	push ecx
+.loop:
+	test ecx, ecx
+	jz .end
+	lea edx, [edi+ecx]
+	sub edx, [esp+4]
+	mov [esp], edx
+
+	mov al, '"'
+	repe scasb
+	test ecx, ecx
+	jnz .end
+
+	push .loop
+	jmp parse_string
+.end:
+	NEXT
+
+forth_semicolon: ; ( -- )
+	dd forth_s_quote
 	db 0x01, 1, ";"
 .cfa:
 	JMP_ENTER
 .pfa:
+	dd .add_exit
 	dd forth_brack_left.cfa
 	dd forth_unsmudge.cfa
 	dd .align_heap
 	dd forth_exit.cfa
+.add_exit:
+	mov eax, [forth_heap]
+	mov dword [eax], forth_exit.cfa
+	add eax, 4
+	mov [forth_heap], eax
+	NEXT
 .align_heap:
-	mov edx, [forth_heap]
-	test dl, 0x3
+	mov eax, [forth_heap]
+	test al, 0x3
 	jz .align_heap_done
-	add edx, 0x04
-	and dl, 0xfc
-	mov [forth_heap], edx
+	add eax, 0x04
+	and al, 0xfc
+	mov [forth_heap], eax
 .align_heap_done:
 	NEXT
 
@@ -444,7 +493,6 @@ forth_unsmudge: ; ( -- )
 .cfa:
 	mov eax, [forth_dictionary]
 	and byte [eax+4], 0xfd
-	int3
 	NEXT
 
 forth_words: ; ( -- )

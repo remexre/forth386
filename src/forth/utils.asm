@@ -7,9 +7,11 @@ extern forth_dictionary
 extern forth_quit.cfa
 
 global capitalize
+global contains
 global enter
 global find
 global is_number
+global lit
 global missing_name
 global parse_number
 global underflow
@@ -89,6 +91,12 @@ find:
 .done:
 	mov esi, [stored_esi]
 	ret
+
+; The code executed to push a literal in a colon definition.
+lit:
+	lodsd
+	push eax
+	NEXT
 
 ; Returns whether the string whose length is in ecx and whose contents are
 ; pointed to by edi is a valid number. If it is, eax will be 1, otherwise it

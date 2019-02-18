@@ -6,8 +6,10 @@ extern console_print_string
 extern console_refresh
 extern find
 extern forth_exit.cfa
+extern forth_heap
 extern forth_state
 extern is_number
+extern lit
 extern parse_number
 extern parse_string
 extern set_parse_buffer
@@ -46,13 +48,13 @@ interpret:
 .interpret_word:
 	call find
 	test eax, eax
-	jz .as_number
+	jz .interpret_as_number
 
 	mov esi, addr_of_loop
 	lea eax, [eax+6+ecx]
 	jmp eax
 
-.as_number:
+.interpret_as_number:
 	call is_number
 	test eax, eax
 	jz .word_not_found
@@ -62,8 +64,37 @@ interpret:
 	jmp .loop
 
 .compile_word:
-	extern forth_eat_flaming_death.cfa
-	jmp forth_eat_flaming_death.cfa
+	call find
+	test eax, eax
+	jz .compile_as_number
+
+	mov dl, [eax+4]
+	lea eax, [eax+6+ecx]
+
+	test dl, 0x01
+	jnz .compile_as_immediate
+
+	mov edx, [forth_heap]
+	mov [edx], eax
+	add dword [forth_heap], 4
+
+	jmp .loop
+
+.compile_as_number:
+	call is_number
+	test eax, eax
+	jz .word_not_found
+
+	call parse_number
+	mov edx, [forth_heap]
+	mov dword [edx], lit
+	mov [edx+4], eax
+	add dword [forth_heap], 8
+	jmp .loop
+
+.compile_as_immediate:
+	mov esi, addr_of_loop
+	jmp eax
 
 .comment_word:
 	mov al, ')'

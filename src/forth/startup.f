@@ -1,10 +1,6 @@
-\ : CRR CR REFRESH ;
-$123456 $3 TYPE CR
-
-\ : NIP SWAP DROP ;
-
-\ : OVER >R DUP R> SWAP ;
-\ : 2DUP OVER OVER ;
+: NIP SWAP DROP ;
+: OVER >R DUP R> SWAP ;
+: 2DUP OVER OVER ;
 
 \ : TEST 1 2 + . ;
 \ : HELLO-WORLD ." Hello, world!" ;
@@ -29,11 +25,14 @@ $123456 $3 TYPE CR
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
-\ : set-color [ $123456 #16 + @ ] LITERAL c! ;
-\ : hacker-mode #0a set-color ;
-\ : reasonable-taste #0f set-color ;
+: REBOOT $fe $64 OUTB ;
 
-\ reasonable-taste
+: set-color [ $123456 #16 + @ ] LITERAL c! ;
+
+: hacker-mode $0a set-color ;
+: hackar-mode $8a set-color ;
+: reasonable-taste $0f set-color ;
+reasonable-taste
 
 HEX
 ABORT
