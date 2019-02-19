@@ -30,7 +30,7 @@
 
 : REBOOT $fe $64 OUTB ;
 
-: IF [ S" [IF]" FIND ] LITERAL , HERE ; IMMEDIATE
+: IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
 : THEN int3 HERE SWAP ! ; IMMEDIATE
 
 (
@@ -44,11 +44,13 @@
 : set-color [ $123456 #16 + @ ] literal c! ;
 
 : hacker-mode $0a set-color ;
-: hackar-mode $8a set-color ;
+: hackar-mode $82 set-color ;
 : reasonable-taste $0f set-color ;
 reasonable-taste
 
 : test dup 0= int3 if s" zero!" type then . ;
+
+: x if 1 then ;
 
 HEX
 ABORT

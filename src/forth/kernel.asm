@@ -283,8 +283,17 @@ forth_exit: ; ( -- ) ( R: nest-sys -- )
 	xchg ebp, esp
 	NEXT
 
-forth_fetch: ; ( a-addr -- x )
+forth_false:
 	dd forth_exit
+	db 0x00, 5, "FALSE"
+.cfa:
+	xor eax, eax
+	dec eax
+	push eax
+	NEXT
+
+forth_fetch: ; ( a-addr -- x )
+	dd forth_false
 	db 0x00, 1, "@"
 .cfa:
 	FORTH_POP_CHK 1
@@ -336,9 +345,7 @@ forth_if_impl:
 	FORTH_POP eax
 	test eax, eax
 	lodsd
-	jnz .not_taken
-	jmp eax
-.not_taken:
+	cmovnz esi, eax
 	NEXT
 
 forth_immediate: ; ( -- )
@@ -481,8 +488,41 @@ forth_plus: ; ( a b -- a+b )
 	add [esp], eax
 	NEXT
 
-forth_quote: ; ( "name" -- xt )
+forth_quit: ; ( R: x* -- )
 	dd forth_plus
+	db 0x00, 4, "QUIT"
+.cfa:
+	mov ebp, return_stack_top
+	mov dword [forth_state], 0
+	call console_read_line
+	mov eax, .enter
+	jmp .enter
+.print_ok:
+	cmp byte [ok], 0
+	je .skip_ok
+	mov edx, 80
+	mov ax, [cursor]
+	div dl
+	test ah, ah
+	jz .skip_nl
+	call console_print_newline
+.skip_nl:
+	mov ecx, 2
+	mov edi, .ok
+	call console_print_string
+	call console_print_newline
+.skip_ok:
+	NEXT
+.ok: db "ok"
+.enter:
+	JMP_ENTER
+.pfa:
+	dd forth_interpret.cfa
+	dd forth_quit.print_ok
+	dd forth_quit.cfa
+
+forth_quote: ; ( "name" -- xt )
+	dd forth_quit
 	db 0x00, 1, "'"
 .cfa:
 	call parse_string
@@ -521,41 +561,8 @@ forth_refresh: ; ( -- )
 	call console_refresh
 	NEXT
 
-forth_quit: ; ( R: x* -- )
-	dd forth_refresh
-	db 0x00, 4, "QUIT"
-.cfa:
-	mov ebp, return_stack_top
-	mov dword [forth_state], 0
-	call console_read_line
-	mov eax, .enter
-	jmp .enter
-.print_ok:
-	cmp byte [ok], 0
-	je .skip_ok
-	mov edx, 80
-	mov ax, [cursor]
-	div dl
-	test ah, ah
-	jz .skip_nl
-	call console_print_newline
-.skip_nl:
-	mov ecx, 2
-	mov edi, .ok
-	call console_print_string
-	call console_print_newline
-.skip_ok:
-	NEXT
-.ok: db "ok"
-.enter:
-	JMP_ENTER
-.pfa:
-	dd forth_interpret.cfa
-	dd forth_quit.print_ok
-	dd forth_quit.cfa
-
 forth_s_quote: ; ( -- c-addr u )
-	dd forth_quit
+	dd forth_refresh
 	db 0x01, 2, 'S"'
 .cfa:
 	call parse_string
@@ -669,8 +676,16 @@ forth_to_r: ; ( x -- ) ( R: -- x )
 	mov [ebp], eax
 	NEXT
 
-forth_type: ; ( c-addr u -- )
+forth_true:
 	dd forth_to_r
+	db 0x00, 4, "TRUE"
+.cfa:
+	xor eax, eax
+	push eax
+	NEXT
+
+forth_type: ; ( c-addr u -- )
+	dd forth_true
 	db 0x00, 4, "TYPE"
 .cfa:
 	FORTH_POP ecx
