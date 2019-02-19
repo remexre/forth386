@@ -2,7 +2,9 @@
 : OVER >R DUP R> SWAP ;
 : 2DUP OVER OVER ;
 
-: VARIABLE CREATE 0 , ;
+\ : CONSTANT CREATE #68 c, , #ac c, #ff c, #e0 c, UNSMUDGE ;
+\ : CONSTANT CREATE , DOES> @ ;
+\ : VARIABLE CREATE 1 CELLS ALLOT ;
 
 \ : TEST 1 2 + . ;
 \ : HELLO-WORLD ." Hello, world!" ;
@@ -30,9 +32,10 @@
 : CRR CR REFRESH ;
 : SP $20 EMIT ;
 
-: REBOOT $fe $64 OUTB ;
+: HALT HLT RECURSE ;
+: REBOOT $fe $64 OUTB s" Rebooting, please hold..." TYPE CRR HALT ;
 
-: IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
+: IF [ S" (IF)" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
 : ENDIF HERE SWAP ! ; IMMEDIATE
 
 (
@@ -50,7 +53,7 @@
   [ $123456 #8 + @ #80 #25 * + ] literal
   = if cls-inner recurse endif ;
 : cls
-  [ $123456 #8 + @ ] literal cls-loop
+  [ $123456 #8 + @ ] literal cls-loop drop
   [ $123456 #12 + @ ] 0 literal w! ;
 
 : set-color [ $123456 #16 + @ ] literal c! ;
@@ -59,8 +62,10 @@
 : hackar-mode $82 set-color ;
 : reasonable-taste $0f set-color ;
 
+42 constant foo
+
 reasonable-taste
-HEX
+DECIMAL
 ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

@@ -7,6 +7,8 @@ extern console_refresh
 extern forth_base
 extern forth_dictionary
 extern forth_quit.cfa
+extern forth_to_in
+extern parse_string
 
 global capitalize
 global contains
@@ -17,6 +19,7 @@ global lit
 global missing_name
 global panic
 global parse_number
+global read_to_quote
 global underflow
 global word_not_found
 
@@ -239,6 +242,34 @@ panic:
 	hlt
 	jmp .loop
 .str: db "Something's gone horribly wrong..."
+
+; Reads until a word containing a " character is found. Returns up until (but
+; not including) the " character. Returns the length in ecx, and the start in
+; edi.
+read_to_quote:
+	call parse_string
+	push edi
+
+.loop:
+	lea edx, [edi+ecx]
+	test ecx, ecx
+	jz .end
+
+	mov al, '"'
+	repne scasb
+	jz .end_quote
+
+	call parse_string
+	jmp .loop
+
+.end_quote:
+	sub edx, ecx
+	dec edx
+.end:
+	pop edi
+	mov ecx, edx
+	sub ecx, edi
+	ret
 
 ; The stack underflow handler.
 underflow:

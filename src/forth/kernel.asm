@@ -18,6 +18,7 @@ extern missing_name
 extern ok
 extern param_stack_top
 extern parse_string
+extern read_to_quote
 extern return_stack_top
 extern word_not_found
 
@@ -62,8 +63,16 @@ forth_brack_right: ; ( -- )
 	mov dword [forth_state], 1
 	NEXT
 
-forth_char_comma: ; ( c -- )
+forth_cells:
 	dd forth_brack_right
+	db 0x00, 5, "CELLS"
+.cfa:
+	FORTH_POP_CHK 1
+	shl dword [esp], 2
+	NEXT
+
+forth_char_comma: ; ( c -- )
+	dd forth_cells
 	db 0x00, 2, "C,"
 .cfa:
 	FORTH_POP eax
@@ -266,7 +275,6 @@ forth_execute: ; ( i * x xt -- j * x )
 	dd forth_equals
 	db 0x00, 7, "EXECUTE"
 .cfa:
-	int3
 	FORTH_POP eax
 	xor ecx, ecx
 	mov cl, [eax+5]
@@ -338,9 +346,16 @@ forth_hex: ; ( -- )
 	mov dword [forth_base], 16
 	NEXT
 
-forth_if_impl:
+forth_hlt: ; ( -- )
 	dd forth_hex
-	db 0x00, 4, "[IF]"
+	db 0x00, 3, "HLT"
+.cfa:
+	hlt
+	NEXT
+
+forth_if_impl:
+	dd forth_hlt
+	db 0x00, 4, "(IF)"
 .cfa:
 	FORTH_POP eax
 	test eax, eax
@@ -565,39 +580,26 @@ forth_s_quote: ; ( -- c-addr u )
 	dd forth_refresh
 	db 0x01, 2, 'S"'
 .cfa:
-	call parse_string
+	call read_to_quote
 	push edi
 	push ecx
-.loop:
-	test ecx, ecx
-	jz .end
-	lea edx, [edi+ecx]
-	sub edx, [esp+4]
-	mov [esp], edx
-
-	mov al, '"'
-	repe scasb
-	test ecx, ecx
-	jnz .end
-
-	push .loop
-	jmp parse_string
-
-.end:
-	mov [esp], ecx
 	mov eax, [forth_state]
 	test eax, eax
 	jnz .compile
 	NEXT
 
 .compile:
+	push esi
+	mov esi, edi
 	mov edi, [forth_heap]
+	mov edx, ecx
+
 	mov dword [edi], forth_s_quote_impl.cfa
 	mov byte [edi+4], cl
 	add edi, 5
-	add esp, 4
-	xchg esi, [esp]
 	rep movsb
+
+	mov ecx, edx
 	pop esi
 	mov [forth_heap], edi
 	NEXT
