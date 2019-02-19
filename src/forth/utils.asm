@@ -229,7 +229,7 @@ missing_name:
 ; The handler for something going very wrong.
 panic:
 	mov edi, .str
-	mov ecx, 35
+	mov ecx, 34
 	call console_print_string
 	call console_print_newline
 	mov byte [color], 0x4e
@@ -238,7 +238,7 @@ panic:
 	int3
 	hlt
 	jmp .loop
-.str: db "Everything's gone horribly wrong..."
+.str: db "Something's gone horribly wrong..."
 
 ; The stack underflow handler.
 underflow:

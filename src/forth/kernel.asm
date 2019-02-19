@@ -704,8 +704,27 @@ forth_unsmudge: ; ( -- )
 	and byte [eax+4], 0xfd
 	NEXT
 
-forth_words: ; ( -- )
+forth_word_fetch: ; ( w-addr -- word )
 	dd forth_unsmudge
+	db 0x00, 2, "W@"
+.cfa:
+	FORTH_POP eax
+	mov ax, [eax]
+	and eax, 0xff
+	push eax
+	NEXT
+
+forth_word_store: ; ( word w-addr -- )
+	dd forth_word_fetch
+	db 0x00, 2, "W!"
+.cfa:
+	FORTH_POP ecx
+	FORTH_POP eax
+	mov [ecx], ax
+	NEXT
+
+forth_words: ; ( -- )
+	dd forth_word_store
 	db 0x00, 5, "WORDS"
 .cfa:
 	mov eax, forth_dictionary

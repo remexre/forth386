@@ -2,6 +2,8 @@
 : OVER >R DUP R> SWAP ;
 : 2DUP OVER OVER ;
 
+: VARIABLE CREATE 0 , ;
+
 \ : TEST 1 2 + . ;
 \ : HELLO-WORLD ." Hello, world!" ;
 
@@ -16,7 +18,7 @@
     \ NIP
   \ ELSE
     \ DUP 4 + @ + RECURSE
-  \ THEN
+  \ ENDIF
 \ ;
 \ : FIND-TAG ( tag-type -- addr )
   \ MB2-STRUCT 8 +
@@ -31,27 +33,33 @@
 : REBOOT $fe $64 OUTB ;
 
 : IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
-: THEN int3 HERE SWAP ! ; IMMEDIATE
+: ENDIF HERE SWAP ! ; IMMEDIATE
 
 (
-: clear
+: cls
   [ $123456 #8 + @ #80 #25 * + ] literal
   [ $123456 #8 + @ ] literal
   do 0 i c! loop
   0 [ $123456 #12 + @ ] literal w!
   refresh ;
 )
+
+: cls-inner dup 0 swap c! 1+ ;
+: cls-loop
+  dup
+  [ $123456 #8 + @ #80 #25 * + ] literal
+  = if cls-inner recurse endif ;
+: cls
+  [ $123456 #8 + @ ] literal cls-loop
+  [ $123456 #12 + @ ] 0 literal w! ;
+
 : set-color [ $123456 #16 + @ ] literal c! ;
 
 : hacker-mode $0a set-color ;
 : hackar-mode $82 set-color ;
 : reasonable-taste $0f set-color ;
+
 reasonable-taste
-
-: test dup 0= int3 if s" zero!" type then . ;
-
-: x if 1 then ;
-
 HEX
 ABORT
 
