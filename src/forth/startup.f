@@ -3,7 +3,7 @@
 : 2DUP OVER OVER ;
 
 \ : CONSTANT CREATE #68 c, , #ac c, #ff c, #e0 c, UNSMUDGE ;
-\ : CONSTANT CREATE , DOES> @ ;
+: CONSTANT CREATE , DOES> @ ;
 \ : VARIABLE CREATE 1 CELLS ALLOT ;
 
 \ : TEST 1 2 + . ;
@@ -62,7 +62,7 @@
 : hackar-mode $82 set-color ;
 : reasonable-taste $0f set-color ;
 
-42 constant foo
+\ 42 constant foo
 
 reasonable-taste
 DECIMAL
