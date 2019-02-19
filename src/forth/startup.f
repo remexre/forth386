@@ -25,23 +25,30 @@
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
+: CRR CR REFRESH ;
+: SP $20 EMIT ;
+
 : REBOOT $fe $64 OUTB ;
 
-: set-color [ $123456 #16 + @ ] LITERAL c! ;
+: IF [ S" [IF]" FIND ] LITERAL , HERE ; IMMEDIATE
+: THEN int3 HERE SWAP ! ; IMMEDIATE
+
+(
+: clear
+  [ $123456 #8 + @ #80 #25 * + ] literal
+  [ $123456 #8 + @ ] literal
+  do 0 i c! loop
+  0 [ $123456 #12 + @ ] literal w!
+  refresh ;
+)
+: set-color [ $123456 #16 + @ ] literal c! ;
 
 : hacker-mode $0a set-color ;
 : hackar-mode $8a set-color ;
 : reasonable-taste $0f set-color ;
 reasonable-taste
 
-\ : if s" [IF]" find compile, here .s ; immediate
-\ : then here swap ! ;
-
-\ : test dup 0= if s" zero!" type then . ;
-
-: crr cr refresh ;
-: loop-body 4 + dup . crr int3 recurse ;
-: loop 0 loop-body ;
+: test dup 0= int3 if s" zero!" type then . ;
 
 HEX
 ABORT

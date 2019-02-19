@@ -237,8 +237,33 @@ forth_dup: ; ( x -- x x )
 	push eax
 	NEXT
 
-forth_execute: ; ( i * x xt -- j * x )
+forth_emit: ; ( c -- )
 	dd forth_dup
+	db 0x00, 4, "EMIT"
+.cfa:
+	FORTH_POP_CHK 1
+	xor ecx, ecx
+	inc ecx
+	mov edi, esp
+	call console_print_string
+	NEXT
+
+forth_equals: ; ( x1 x2 -- flag )
+	dd forth_emit
+	db 0x00, 1, "="
+.cfa:
+	FORTH_POP_CHK 2
+	pop ecx
+	mov eax, [esp]
+	xor edx, edx
+	cmp eax, ecx
+	setne dl
+	dec edx
+	mov [esp], edx
+	NEXT
+
+forth_execute: ; ( i * x xt -- j * x )
+	dd forth_equals
 	db 0x00, 7, "EXECUTE"
 .cfa:
 	int3
@@ -268,8 +293,20 @@ forth_fetch: ; ( a-addr -- x )
 	mov [esp], eax
 	NEXT
 
-forth_from_r: ; ( -- x ) ( R: x -- )
+forth_find: ; ( c-addr u -- 0 | xt )
 	dd forth_fetch
+	db 0x00, 4, "FIND"
+.cfa:
+	FORTH_POP_CHK 2
+	pop ecx
+	pop edi
+	call capitalize
+	call find
+	push eax
+	NEXT
+
+forth_from_r: ; ( -- x ) ( R: x -- )
+	dd forth_find
 	db 0x00, 2, "R>"
 .cfa:
 	mov eax, [ebp]
@@ -350,12 +387,20 @@ forth_int3: ; ( c-addr u -- )
 
 forth_interpret: ; ( -- )
 	dd forth_int3
-	db 0x00, 9, "INTERPRET"
+	db 0x02, 9, "INTERPRET"
 .cfa:
 	jmp interpret
 
-forth_minus: ; ( a b -- a-b )
+forth_invert: ; ( -- )
 	dd forth_interpret
+	db 0x00, 6, "INVERT"
+.cfa:
+	FORTH_POP_CHK 1
+	not dword [esp]
+	NEXT
+
+forth_minus: ; ( a b -- a-b )
+	dd forth_invert
 	db 0x00, 1, "-"
 .cfa:
 	FORTH_POP ecx
@@ -375,8 +420,26 @@ forth_literal: ; ( n -- )
 	add dword [forth_heap], 8
 	NEXT
 
-forth_outb: ; ( c u -- )
+forth_multiply: ; ( a b -- a*b )
 	dd forth_literal
+	db 0x00, 1, "*"
+.cfa:
+	FORTH_POP_CHK 2
+	pop eax
+	mul dword [esp]
+	mov [esp], eax
+	NEXT
+
+forth_one_plus: ; ( u -- u )
+	dd forth_multiply
+	db 0x00, 2, "1+"
+.cfa:
+	FORTH_POP_CHK 1
+	inc dword [esp]
+	NEXT
+
+forth_outb: ; ( c u -- )
+	dd forth_one_plus
 	db 0x00, 4, "OUTB"
 .cfa:
 	FORTH_POP edx
@@ -413,10 +476,9 @@ forth_plus: ; ( a b -- a+b )
 	dd forth_paren_left
 	db 0x00, 1, "+"
 .cfa:
-	FORTH_POP ecx
-	FORTH_POP eax
-	add eax, ecx
-	push eax
+	FORTH_POP_CHK 2
+	pop eax
+	add [esp], eax
 	NEXT
 
 forth_quote: ; ( "name" -- xt )
