@@ -32,9 +32,10 @@
 : SP $20 EMIT ;
 
 : HALT HLT RECURSE ;
-: REBOOT $fe $64 OUTB s" Rebooting, please hold..." TYPE CRR HALT ;
+: REBOOT s" Rebooting, please hold..." TYPE CRR $fe $64 OUTB HALT ;
 
 : IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
+\ : ELSE HERE SWAP ! 0 , HERE ; IMMEDIATE
 : ENDIF HERE SWAP ! ; IMMEDIATE
 
 (
@@ -141,14 +142,19 @@
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit cr ;
 
+\ : asdf if s" nonzero" else s" zero" endif type cr ;
+: asdf if s" nonzero" type endif crr ;
+0 asdf
+\ 1 asdf
+
 HEX
 
-: DOES> [ S" [DOES>]" FIND #13 + ] LITERAL , ;
-1 . SP HERE . CR
-: CONST CREATE , DOES> @ ;
-2 . SP HERE . CR
-123 CONST X
-3 . SP HERE . CR
+\ : DOES> [ S" [DOES>]" FIND #13 + ] LITERAL , ;
+\ 1 . SP HERE . CR
+\ : CONST CREATE , DOES> @ ;
+\ 2 . SP HERE . CR
+\ 123 CONST X
+\ 3 . SP HERE . CR
 
 reasonable-taste
 HEX
