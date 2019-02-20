@@ -71,8 +71,7 @@
   dup  $8 rshift hexdump-write-byte
                 hexdump-write-byte ;
 : hexdump-write-row ( addr -- )
-  dup hexdump-write-dword
-  sp $b3 emit
+  $b3 emit dup hexdump-write-dword $b3 emit
   \ This could benefit from a loop...
   sp dup      c@ hexdump-write-byte
   sp dup $1 + c@ hexdump-write-byte
@@ -110,6 +109,17 @@
       $f + c@ emit
   sp $b3 emit cr ;
 : hexdump ( addr -- )
+  \ BIG rip, it'd be nice to better syntax here...
+  $da emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $bf emit cr
   \ This could benefit from a loop...
   dup       hexdump-write-row
   dup $10 + hexdump-write-row
@@ -118,7 +128,18 @@
   dup $40 + hexdump-write-row
   dup $50 + hexdump-write-row
   dup $60 + hexdump-write-row
-      $70 + hexdump-write-row ;
+      $70 + hexdump-write-row
+  \ big rip again
+  $c0 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit cr ;
 
 HEX
 
