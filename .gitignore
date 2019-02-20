@@ -1,5 +1,6 @@
 .*
 !.gitignore
+!.tokeirc
 
 tmp/
 out/

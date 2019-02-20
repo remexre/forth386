@@ -1,12 +1,189 @@
-: NIP SWAP DROP ;
-: OVER >R DUP R> SWAP ;
-: 2DUP OVER OVER ;
+HEX
+
+: NIP   ( x1 x2 -- x2          ) SWAP DROP      ;
+: OVER  ( x1 x2 -- x1 x2 x1    ) >R DUP R> SWAP ;
+: TUCK  ( x1 x2 -- x2 x1 x2    ) SWAP OVER      ;
+: 2DROP ( x1 x2 --             ) DROP DROP      ;
+: 2DUP  ( x1 x2 -- x1 x2 x1 x2 ) OVER OVER      ;
+
+: IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
+: ELSE .s int3 ; IMMEDIATE
+\ [ S" NEXT" FIND #10 + ] LITERAL , HERE 0 , HERE 2 PICK ! ; IMMEDIATE
+: ENDIF HERE SWAP ! ; IMMEDIATE
 
 \ : CONSTANT CREATE #68 c, , #ac c, #ff c, #e0 c, UNSMUDGE ;
 \ : VARIABLE CREATE 1 CELLS ALLOT ;
 
-\ : TEST 1 2 + . ;
-\ : HELLO-WORLD ." Hello, world!" ;
+: CHAR WORD DROP c@ ;
+: BL $20 ; \ TODO $20 CONSTANT BL
+: SPACE BL EMIT ;
+\ TODO SPACES
+
+: CRR CR REFRESH ;
+: HALT HLT RECURSE ;
+: REBOOT s" Rebooting, please hold..." TYPE CRR $fe $64 OUTB HALT ;
+
+(
+: cls
+  [ $123456 #8 + @ #80 #25 * + ] literal
+  [ $123456 #8 + @ ] literal
+  do 0 i c! loop
+  0 [ $123456 #12 + @ ] literal w!
+  refresh ;
+)
+
+: cls-loop
+  dup
+  [ $123456 #8 + @ #80 #25 * + ] literal
+  = if dup 0 swap c! 1+ recurse endif ;
+: cls
+  [ $123456 #8 + @ ] literal cls-loop drop
+  [ $123456 #12 + @ ] 0 literal w! ;
+
+: set-color [ $123456 #16 + @ ] literal c! refresh ;
+
+: hacker-mode $0a set-color ;
+: hackar-mode $82 set-color ;
+: reasonable-taste $0f set-color ;
+
+: hexdump-write-nybble ( u -- ) $f and s" 0123456789abcdef" drop + c@ emit ;
+: hexdump-write-byte ( u -- )
+  dup $4 rshift
+  hexdump-write-nybble
+  hexdump-write-nybble ;
+: hexdump-write-dword ( u -- )
+  dup $18 rshift hexdump-write-byte
+  dup $10 rshift hexdump-write-byte
+  dup  $8 rshift hexdump-write-byte
+                hexdump-write-byte ;
+: hexdump-write-row ( addr -- )
+  $b3 emit dup hexdump-write-dword $b3 emit
+  \ This could benefit from a loop...
+  space dup      c@ hexdump-write-byte
+  space dup $1 + c@ hexdump-write-byte
+  space dup $2 + c@ hexdump-write-byte
+  space dup $3 + c@ hexdump-write-byte
+  space dup $4 + c@ hexdump-write-byte
+  space dup $5 + c@ hexdump-write-byte
+  space dup $6 + c@ hexdump-write-byte
+  space dup $7 + c@ hexdump-write-byte
+  space dup $8 + c@ hexdump-write-byte
+  space dup $9 + c@ hexdump-write-byte
+  space dup $a + c@ hexdump-write-byte
+  space dup $b + c@ hexdump-write-byte
+  space dup $c + c@ hexdump-write-byte
+  space dup $d + c@ hexdump-write-byte
+  space dup $e + c@ hexdump-write-byte
+  space dup $f + c@ hexdump-write-byte
+  space $b3 emit space
+  \ This could benefit from a loop...
+  dup      c@ emit
+  dup $1 + c@ emit
+  dup $2 + c@ emit
+  dup $3 + c@ emit
+  dup $4 + c@ emit
+  dup $5 + c@ emit
+  dup $6 + c@ emit
+  dup $7 + c@ emit
+  dup $8 + c@ emit
+  dup $9 + c@ emit
+  dup $a + c@ emit
+  dup $b + c@ emit
+  dup $c + c@ emit
+  dup $d + c@ emit
+  dup $e + c@ emit
+      $f + c@ emit
+  space $b3 emit cr ;
+: hexdump ( addr -- )
+  \ BIG rip, it'd be nice to better syntax here...
+  $da emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $bf emit cr
+  \ And a loop here...
+  $b3 emit space space space space space space space space $b3 emit
+  space space dup      hexdump-write-nybble
+  space space dup $1 + hexdump-write-nybble 
+  space space dup $2 + hexdump-write-nybble
+  space space dup $3 + hexdump-write-nybble
+  space space dup $4 + hexdump-write-nybble
+  space space dup $5 + hexdump-write-nybble
+  space space dup $6 + hexdump-write-nybble
+  space space dup $7 + hexdump-write-nybble
+  space space dup $8 + hexdump-write-nybble
+  space space dup $9 + hexdump-write-nybble
+  space space dup $a + hexdump-write-nybble
+  space space dup $b + hexdump-write-nybble
+  space space dup $c + hexdump-write-nybble
+  space space dup $d + hexdump-write-nybble
+  space space dup $e + hexdump-write-nybble
+  space space dup $f + hexdump-write-nybble
+
+  space $b3 emit space
+  dup      hexdump-write-nybble
+  dup $1 + hexdump-write-nybble 
+  dup $2 + hexdump-write-nybble
+  dup $3 + hexdump-write-nybble
+  dup $4 + hexdump-write-nybble
+  dup $5 + hexdump-write-nybble
+  dup $6 + hexdump-write-nybble
+  dup $7 + hexdump-write-nybble
+  dup $8 + hexdump-write-nybble
+  dup $9 + hexdump-write-nybble
+  dup $a + hexdump-write-nybble
+  dup $b + hexdump-write-nybble
+  dup $c + hexdump-write-nybble
+  dup $d + hexdump-write-nybble
+  dup $e + hexdump-write-nybble
+  dup $f + hexdump-write-nybble
+  space $b3 emit cr
+  \ And another byte array here...
+  $c3 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c5 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c5 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $b4 emit cr
+  \ This could benefit from a loop...
+  dup       hexdump-write-row
+  dup $10 + hexdump-write-row
+  dup $20 + hexdump-write-row
+  dup $30 + hexdump-write-row
+  dup $40 + hexdump-write-row
+  dup $50 + hexdump-write-row
+  dup $60 + hexdump-write-row
+      $70 + hexdump-write-row
+  \ More byte arrays being necessary...
+  $c0 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit cr ;
+
+: asdf 0= if s" zero" [ latest hexdump ] else s" nonzero" endif type crr ;
+latest hexdump
+
+\ : DOES> [ S" [DOES>]" FIND #13 + ] LITERAL , ;
+\ 1 . SPACE HERE . CR
+\ : CONST CREATE , DOES> @ ;
+\ 2 . SPACE HERE . CR
+\ 123 CONST X
+\ 3 . SPACE HERE . CR
 
 \ $123456 CONSTANT IPB
 \ ." IPB-CHECK" IPB @ $00425049 2DUP = . . . ;
@@ -27,134 +204,6 @@
 
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
-
-: CRR CR REFRESH ;
-: SP $20 EMIT ;
-
-: HALT HLT RECURSE ;
-: REBOOT s" Rebooting, please hold..." TYPE CRR $fe $64 OUTB HALT ;
-
-: IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
-\ : ELSE HERE SWAP ! 0 , HERE ; IMMEDIATE
-: ENDIF HERE SWAP ! ; IMMEDIATE
-
-(
-: cls
-  [ $123456 #8 + @ #80 #25 * + ] literal
-  [ $123456 #8 + @ ] literal
-  do 0 i c! loop
-  0 [ $123456 #12 + @ ] literal w!
-  refresh ;
-)
-
-: cls-loop
-  dup
-  [ $123456 #8 + @ #80 #25 * + ] literal
-  = if dup 0 swap c! 1+ recurse endif ;
-: cls
-  [ $123456 #8 + @ ] literal cls-loop drop
-  [ $123456 #12 + @ ] 0 literal w! ;
-
-: set-color [ $123456 #16 + @ ] literal c! ;
-
-: hacker-mode $0a set-color ;
-: hackar-mode $82 set-color ;
-: reasonable-taste $0f set-color ;
-
-: hexdump-write-nybble ( u -- ) $f and s" 0123456789abcdef" drop + c@ emit ;
-: hexdump-write-byte ( u -- )
-  dup $4 rshift
-  hexdump-write-nybble
-  hexdump-write-nybble ;
-: hexdump-write-dword ( u -- )
-  dup $18 rshift hexdump-write-byte
-  dup $10 rshift hexdump-write-byte
-  dup  $8 rshift hexdump-write-byte
-                hexdump-write-byte ;
-: hexdump-write-row ( addr -- )
-  $b3 emit dup hexdump-write-dword $b3 emit
-  \ This could benefit from a loop...
-  sp dup      c@ hexdump-write-byte
-  sp dup $1 + c@ hexdump-write-byte
-  sp dup $2 + c@ hexdump-write-byte
-  sp dup $3 + c@ hexdump-write-byte
-  sp dup $4 + c@ hexdump-write-byte
-  sp dup $5 + c@ hexdump-write-byte
-  sp dup $6 + c@ hexdump-write-byte
-  sp dup $7 + c@ hexdump-write-byte
-  sp dup $8 + c@ hexdump-write-byte
-  sp dup $9 + c@ hexdump-write-byte
-  sp dup $a + c@ hexdump-write-byte
-  sp dup $b + c@ hexdump-write-byte
-  sp dup $c + c@ hexdump-write-byte
-  sp dup $d + c@ hexdump-write-byte
-  sp dup $e + c@ hexdump-write-byte
-  sp dup $f + c@ hexdump-write-byte
-  sp $b3 emit sp
-  \ This could benefit from a loop...
-  dup      c@ emit
-  dup $1 + c@ emit
-  dup $2 + c@ emit
-  dup $3 + c@ emit
-  dup $4 + c@ emit
-  dup $5 + c@ emit
-  dup $6 + c@ emit
-  dup $7 + c@ emit
-  dup $8 + c@ emit
-  dup $9 + c@ emit
-  dup $a + c@ emit
-  dup $b + c@ emit
-  dup $c + c@ emit
-  dup $d + c@ emit
-  dup $e + c@ emit
-      $f + c@ emit
-  sp $b3 emit cr ;
-: hexdump ( addr -- )
-  \ BIG rip, it'd be nice to better syntax here...
-  $da emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $bf emit cr
-  \ This could benefit from a loop...
-  dup       hexdump-write-row
-  dup $10 + hexdump-write-row
-  dup $20 + hexdump-write-row
-  dup $30 + hexdump-write-row
-  dup $40 + hexdump-write-row
-  dup $50 + hexdump-write-row
-  dup $60 + hexdump-write-row
-      $70 + hexdump-write-row
-  \ big rip again
-  $c0 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit cr ;
-
-\ : asdf if s" nonzero" else s" zero" endif type cr ;
-: asdf if s" nonzero" type endif crr ;
-0 asdf
-\ 1 asdf
-
-HEX
-
-\ : DOES> [ S" [DOES>]" FIND #13 + ] LITERAL , ;
-\ 1 . SP HERE . CR
-\ : CONST CREATE , DOES> @ ;
-\ 2 . SP HERE . CR
-\ 123 CONST X
-\ 3 . SP HERE . CR
 
 reasonable-taste
 HEX

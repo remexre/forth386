@@ -20,6 +20,7 @@ extern param_stack_top
 extern parse_string
 extern read_to_quote
 extern return_stack_top
+extern underflow
 extern uninited_word
 extern word_not_found
 
@@ -31,7 +32,7 @@ global forth_quit.cfa
 global forth_state
 global forth_to_in
 
-%include "src/forth/common.inc"
+%include "src/kernel/common.inc"
 
 [section .forth]
 
@@ -185,8 +186,18 @@ forth_decimal: ; ( -- )
 	mov dword [forth_base], 10
 	NEXT
 
-forth_does_enter: ; ( addr -- )
+forth_depth: ; ( -- u )
 	dd forth_decimal
+	db 0x00, 5, "DEPTH"
+.cfa:
+	mov eax, param_stack_top
+	sub eax, esp
+	shr eax, 2
+	push eax
+	NEXT
+
+forth_does_enter: ; ( addr -- )
+	dd forth_depth
 	db 0x00, 10, "DOES>ENTER"
 .cfa:
 	FORTH_POP eax
@@ -492,6 +503,20 @@ forth_multiply: ; ( a b -- a*b )
 	mov [esp], eax
 	NEXT
 
+forth_negate: ; ( -- )
+	dd forth_multiply
+	db 0x00, 6, "NEGATE"
+.cfa:
+	FORTH_POP_CHK 1
+	neg dword [esp]
+	NEXT
+
+forth_next:
+	dd forth_negate
+	db 0x00, 4, "NEXT"
+.cfa:
+	NEXT
+
 forth_one_plus: ; ( u -- u )
 	dd forth_multiply
 	db 0x00, 2, "1+"
@@ -543,8 +568,23 @@ forth_paren_left:
 	or dword [forth_state], 0x02
 	NEXT
 
-forth_plus: ; ( a b -- a+b )
+forth_pick: ; ( xu ... x0 u -- xu ... x0 xu )
 	dd forth_paren_left
+	db 0x00, 4, "PICK"
+.cfa:
+	FORTH_POP eax
+	mov ecx, param_stack_top
+	lea edx, [eax+1]
+	shl edx, 2
+	sub ecx, edx
+	cmp esp, ecx
+	ja underflow
+	mov edx, [esp+edx-4]
+	push edx
+	NEXT
+
+forth_plus: ; ( a b -- a+b )
+	dd forth_pick
 	db 0x00, 1, "+"
 .cfa:
 	FORTH_POP_CHK 2
@@ -625,8 +665,21 @@ forth_refresh: ; ( -- )
 	call console_refresh
 	NEXT
 
-forth_rshift: ; ( x1 u -- x2 )
+forth_rot: ; ( x1 x2 x3 -- x2 x3 x1 )
 	dd forth_refresh
+	db 0x00, 3, "ROT"
+.cfa:
+	FORTH_POP_CHK 3
+	mov eax, [esp+8]
+	mov ecx, [esp+4]
+	mov edx, [esp  ]
+	mov [esp+8], ecx
+	mov [esp+4], edx
+	mov [esp  ], eax
+	NEXT
+
+forth_rshift: ; ( x1 u -- x2 )
+	dd forth_rot
 	db 0x00, 6, "RSHIFT"
 .cfa:
 	FORTH_POP ecx
@@ -640,11 +693,11 @@ forth_s_quote: ; ( -- c-addr u )
 	db 0x01, 2, 'S"'
 .cfa:
 	call read_to_quote
-	push edi
-	push ecx
 	mov eax, [forth_state]
 	test eax, eax
 	jnz .compile
+	push edi
+	push ecx
 	NEXT
 
 .compile:
@@ -765,8 +818,19 @@ forth_unsmudge: ; ( -- )
 	and byte [eax+4], 0xfd
 	NEXT
 
-forth_word_fetch: ; ( w-addr -- word )
+forth_word: ; ( "name" -- c-addr u )
 	dd forth_unsmudge
+	db 0x00, 4, "WORD"
+.cfa:
+	call parse_string
+	test ecx, ecx
+	jz missing_name
+	push edi
+	push ecx
+	NEXT
+
+forth_word_fetch: ; ( w-addr -- word )
+	dd forth_word
 	db 0x00, 2, "W@"
 .cfa:
 	FORTH_POP eax

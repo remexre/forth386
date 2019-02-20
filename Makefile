@@ -4,11 +4,6 @@ QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
 UNITS += debug/debug_port
-UNITS += forth/interpret
-UNITS += forth/kernel
-UNITS += forth/parse
-UNITS += forth/startup
-UNITS += forth/utils
 UNITS += io/ascii
 UNITS += io/console_low
 UNITS += io/console_read
@@ -17,6 +12,11 @@ UNITS += io/kbd
 UNITS += io/ps2
 UNITS += io/scancode_set_1
 UNITS += ipb
+UNITS += kernel/interpret
+UNITS += kernel/kernel
+UNITS += kernel/parse
+UNITS += kernel/startup
+UNITS += kernel/utils
 UNITS += x86/gdt
 UNITS += x86/idt
 UNITS += x86/multiboot2
@@ -66,5 +66,8 @@ tmp/%.o: src/%.asm
 	@mkdir -p $(dir $@)
 	nasm -felf -o $@ $< $(NASMFLAGS)
 
-tmp/forth/kernel.o: src/forth/common.inc
-tmp/forth/startup.o: src/forth/startup.f
+tmp/kernel/kernel.o: src/kernel/common.inc
+tmp/kernel/startup.o: src/forth/startup.f
+tmp/kernel/utils.o: src/kernel/common.inc
+tmp/io/scancode_set_1.o: src/io/keycodes.inc
+tmp/x86/idt.o: src/debug/debug.inc

@@ -24,7 +24,7 @@ global underflow
 global uninited_word
 global word_not_found
 
-%include "src/forth/common.inc"
+%include "src/kernel/common.inc"
 
 [section .enter]
 
