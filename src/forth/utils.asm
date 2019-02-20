@@ -21,6 +21,7 @@ global panic
 global parse_number
 global read_to_quote
 global underflow
+global uninited_word
 global word_not_found
 
 %include "src/forth/common.inc"
@@ -279,6 +280,16 @@ underflow:
 	call console_print_newline
 	jmp forth_quit.cfa
 .str: db "Stack underflow!"
+
+; The handler for an uninitialized word, i.e. one that doesn't have a code
+; field.
+uninited_word:
+	mov edi, .str
+	mov ecx, 19
+	call console_print_string
+	call console_print_newline
+	jmp forth_quit.cfa
+.str: db "Uninitialized word!"
 
 ; The word-not-found handler.
 word_not_found:

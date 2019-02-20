@@ -121,7 +121,7 @@ console_scroll:
 
 [section .rodata]
 
-number_map: db "0123456789ABCDEF"
+number_map: db "0123456789abcdef"
 
 [section .bss]
 

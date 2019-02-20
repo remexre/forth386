@@ -20,6 +20,7 @@ extern param_stack_top
 extern parse_string
 extern read_to_quote
 extern return_stack_top
+extern uninited_word
 extern word_not_found
 
 global forth_base
@@ -45,12 +46,22 @@ forth_allot : ; ( n -- )
 	dd forth_abort
 	db 0x00, 5, "ALLOT"
 .cfa:
+	FORTH_POP_CHK 2
 	pop eax
 	add [forth_heap], eax
 	NEXT
 
-forth_brack_left: ; ( -- )
+forth_and : ; ( x1 x2 -- x3 )
 	dd forth_allot
+	db 0x00, 3, "AND"
+.cfa:
+	FORTH_POP_CHK 2
+	pop eax
+	and [esp], eax
+	NEXT
+
+forth_brack_left: ; ( -- )
+	dd forth_and
 	db 0x01, 1, "["
 .cfa:
 	mov dword [forth_state], 0
@@ -153,12 +164,18 @@ forth_create: ; ( -- a-addr )
 	push esi
 	mov esi, edi
 	mov edi, edx
-	add edx, ecx
 	rep movsb
 	pop esi
 
-	mov [forth_heap], edx
-	push edx
+	mov byte [edi], 0xe9
+	mov ecx, uninited_word
+	sub ecx, edi
+	sub ecx, 5
+	mov [edi+1], ecx
+	add edi, 5
+
+	mov [forth_heap], edi
+	push edi
 	NEXT
 
 forth_decimal: ; ( -- )
@@ -168,23 +185,27 @@ forth_decimal: ; ( -- )
 	mov dword [forth_base], 10
 	NEXT
 
-forth_does_enter: ; ( c-addr -- )
+forth_does_enter: ; ( addr -- )
 	dd forth_decimal
 	db 0x00, 10, "DOES>ENTER"
 .cfa:
 	FORTH_POP eax
-	mov byte [eax], 0xe9
-	inc eax
-	mov ecx, enter
-	sub ecx, eax
-	sub ecx, 4
-	mov [eax], ecx
-	add eax, 4
-	mov [forth_heap], eax
+	lea ecx, [eax-4]
+	neg eax
+	add eax, enter
+	mov [ecx], eax
 	NEXT
 
-forth_dot: ; ( n -- )
+forth_does_impl: ; ( -- )
 	dd forth_does_enter
+	db 0x01, 7, "[DOES>]"
+.cfa:
+	int3
+	sti
+	jmp $
+
+forth_dot: ; ( n -- )
+	dd forth_does_impl
 	db 0x00, 1, "."
 .cfa:
 	FORTH_POP eax
@@ -255,6 +276,7 @@ forth_emit: ; ( c -- )
 	inc ecx
 	mov edi, esp
 	call console_print_string
+	add esp, 4
 	NEXT
 
 forth_equals: ; ( x1 x2 -- flag )
@@ -355,7 +377,7 @@ forth_hlt: ; ( -- )
 
 forth_if_impl:
 	dd forth_hlt
-	db 0x00, 4, "(IF)"
+	db 0x00, 4, "[IF]"
 .cfa:
 	FORTH_POP eax
 	test eax, eax
@@ -421,18 +443,16 @@ forth_invert: ; ( -- )
 	not dword [esp]
 	NEXT
 
-forth_minus: ; ( a b -- a-b )
+forth_latest: ; ( -- xt )
 	dd forth_invert
-	db 0x00, 1, "-"
+	db 0x00, 6, "LATEST"
 .cfa:
-	FORTH_POP ecx
-	FORTH_POP eax
-	sub eax, ecx
+	mov eax, [forth_dictionary]
 	push eax
 	NEXT
 
 forth_literal: ; ( n -- )
-	dd forth_minus
+	dd forth_latest
 	db 0x01, 7, "LITERAL"
 .cfa:
 	FORTH_POP eax
@@ -442,8 +462,28 @@ forth_literal: ; ( n -- )
 	add dword [forth_heap], 8
 	NEXT
 
-forth_multiply: ; ( a b -- a*b )
+forth_lshift: ; ( x1 u -- x2 )
 	dd forth_literal
+	db 0x00, 6, "LSHIFT"
+.cfa:
+	FORTH_POP ecx
+	FORTH_POP eax
+	shl eax, cl
+	push eax
+	NEXT
+
+forth_minus: ; ( a b -- a-b )
+	dd forth_lshift
+	db 0x00, 1, "-"
+.cfa:
+	FORTH_POP ecx
+	FORTH_POP eax
+	sub eax, ecx
+	push eax
+	NEXT
+
+forth_multiply: ; ( a b -- a*b )
+	dd forth_minus
 	db 0x00, 1, "*"
 .cfa:
 	FORTH_POP_CHK 2
@@ -460,8 +500,17 @@ forth_one_plus: ; ( u -- u )
 	inc dword [esp]
 	NEXT
 
-forth_outb: ; ( c u -- )
+forth_or : ; ( x1 x2 -- x3 )
 	dd forth_one_plus
+	db 0x00, 2, "OR"
+.cfa:
+	FORTH_POP_CHK 2
+	pop eax
+	or [esp], eax
+	NEXT
+
+forth_outb: ; ( c u -- )
+	dd forth_or
 	db 0x00, 4, "OUTB"
 .cfa:
 	FORTH_POP edx
@@ -576,8 +625,18 @@ forth_refresh: ; ( -- )
 	call console_refresh
 	NEXT
 
-forth_s_quote: ; ( -- c-addr u )
+forth_rshift: ; ( x1 u -- x2 )
 	dd forth_refresh
+	db 0x00, 6, "RSHIFT"
+.cfa:
+	FORTH_POP ecx
+	FORTH_POP eax
+	shr eax, cl
+	push eax
+	NEXT
+
+forth_s_quote: ; ( -- c-addr u )
+	dd forth_rshift
 	db 0x01, 2, 'S"'
 .cfa:
 	call read_to_quote
