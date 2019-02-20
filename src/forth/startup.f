@@ -1,15 +1,22 @@
-HEX
+: NIP   ( X1 X2 -- X2          ) SWAP DROP      ;
+: OVER  ( X1 X2 -- X1 X2 X1    ) >R DUP R> SWAP ;
+: TUCK  ( X1 X2 -- X2 X1 X2    ) SWAP OVER      ;
+: 2DROP ( X1 X2 --             ) DROP DROP      ;
+: 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
 
-: NIP   ( x1 x2 -- x2          ) SWAP DROP      ;
-: OVER  ( x1 x2 -- x1 x2 x1    ) >R DUP R> SWAP ;
-: TUCK  ( x1 x2 -- x2 x1 x2    ) SWAP OVER      ;
-: 2DROP ( x1 x2 --             ) DROP DROP      ;
-: 2DUP  ( x1 x2 -- x1 x2 x1 x2 ) OVER OVER      ;
+: */ ( a b c -- a*b/c ) */MOD NIP ;
+: MOD ( a b -- a%b ) /MOD NIP ;
 
-: IF [ S" [IF]" FIND #10 + ] LITERAL , HERE 0 , ; IMMEDIATE
-: ELSE .s int3 ; IMMEDIATE
-\ [ S" NEXT" FIND #10 + ] LITERAL , HERE 0 , HERE 2 PICK ! ; IMMEDIATE
+: IF [ ' [IF] CFA ] LITERAL , HERE 0 , ; IMMEDIATE
+: ELSE [ ' [ELSE] CFA ] LITERAL , HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE
 : ENDIF HERE SWAP ! ; IMMEDIATE
+
+\ ." must by CREATEd manually, since S"'s status as an immediate word means the
+\ rest of the definition would be parsed as part of the string, rather than
+\ executing S" when ." is run.
+CREATE ." DOES>ENTER ' S" CFA , ]
+  STATE @ IF [ ' TYPE CFA ] LITERAL , ELSE TYPE ENDIF EXIT
+  [ UNSMUDGE IMMEDIATE
 
 \ : CONSTANT CREATE #68 c, , #ac c, #ff c, #e0 c, UNSMUDGE ;
 \ : VARIABLE CREATE 1 CELLS ALLOT ;
@@ -19,9 +26,16 @@ HEX
 : SPACE BL EMIT ;
 \ TODO SPACES
 
+\ TODO This is absurdly slow -- is there a dirty hack that'd make it more
+\ reasonable?
+: . ( X -- )
+  [ $123456 #12 + @ ] literal w@
+  #80 MOD IF SPACE ENDIF
+  .NOSPACE ;
+
 : CRR CR REFRESH ;
 : HALT HLT RECURSE ;
-: REBOOT s" Rebooting, please hold..." TYPE CRR $fe $64 OUTB HALT ;
+: REBOOT ." Rebooting, please hold..." CRR $fe $64 OUTB HALT ;
 
 (
 : cls
@@ -38,7 +52,7 @@ HEX
   = if dup 0 swap c! 1+ recurse endif ;
 : cls
   [ $123456 #8 + @ ] literal cls-loop drop
-  [ $123456 #12 + @ ] 0 literal w! ;
+  0 [ $123456 #12 + @ ] literal w! ;
 
 : set-color [ $123456 #16 + @ ] literal c! refresh ;
 
@@ -173,10 +187,7 @@ HEX
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c1 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
-  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit cr ;
-
-: asdf 0= if s" zero" [ latest hexdump ] else s" nonzero" endif type crr ;
-latest hexdump
+  $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit crr ;
 
 \ : DOES> [ S" [DOES>]" FIND #13 + ] LITERAL , ;
 \ 1 . SPACE HERE . CR

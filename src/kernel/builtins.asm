@@ -13,7 +13,6 @@ extern find
 extern halt
 extern heap_start
 extern interpret
-extern lit
 extern missing_name
 extern ok
 extern param_stack_top
@@ -28,6 +27,7 @@ global forth_base
 global forth_dictionary
 global forth_exit.cfa
 global forth_heap
+global forth_lit_impl.cfa
 global forth_quit.cfa
 global forth_state
 global forth_to_in
@@ -83,8 +83,19 @@ forth_cells:
 	shl dword [esp], 2
 	NEXT
 
-forth_char_comma: ; ( c -- )
+forth_cfa:
 	dd forth_cells
+	db 0x00, 3, "CFA"
+.cfa:
+	FORTH_POP eax
+	xor ecx, ecx
+	mov cl, [eax+5]
+	lea eax, [eax+ecx+6]
+	push eax
+	NEXT
+
+forth_char_comma: ; ( c -- )
+	dd forth_cfa
 	db 0x00, 2, "C,"
 .cfa:
 	FORTH_POP eax
@@ -196,8 +207,20 @@ forth_depth: ; ( -- u )
 	push eax
 	NEXT
 
-forth_does_enter: ; ( addr -- )
+forth_divmod: ; ( a b -- a%b a/b )
 	dd forth_depth
+	db 0x00, 4, "/MOD"
+.cfa:
+	FORTH_POP_CHK 2
+	mov eax, [esp+4]
+	xor edx, edx
+	div dword [esp]
+	mov [esp+4], edx
+	mov [esp], eax
+	NEXT
+
+forth_does_enter: ; ( addr -- )
+	dd forth_divmod
 	db 0x00, 10, "DOES>ENTER"
 .cfa:
 	FORTH_POP eax
@@ -215,16 +238,16 @@ forth_does_impl: ; ( -- )
 	sti
 	jmp $
 
-forth_dot: ; ( n -- )
+forth_dot_nospace: ; ( n -- )
 	dd forth_does_impl
-	db 0x00, 1, "."
+	db 0x00, 8, ".NOSPACE"
 .cfa:
 	FORTH_POP eax
 	call console_print_number
 	NEXT
 
 forth_dot_s: ; ( -- )
-	dd forth_dot
+	dd forth_dot_nospace
 	db 0x00, 2, ".S"
 .cfa:
 	mov ecx, 1
@@ -278,8 +301,15 @@ forth_dup: ; ( x -- x x )
 	push eax
 	NEXT
 
-forth_emit: ; ( c -- )
+forth_else_impl:
 	dd forth_dup
+	db 0x00, 6, "[ELSE]"
+.cfa:
+	mov esi, [esi]
+	NEXT
+
+forth_emit: ; ( c -- )
+	dd forth_else_impl
 	db 0x00, 4, "EMIT"
 .cfa:
 	FORTH_POP_CHK 1
@@ -393,7 +423,7 @@ forth_if_impl:
 	FORTH_POP eax
 	test eax, eax
 	lodsd
-	cmovnz esi, eax
+	cmovz esi, eax
 	NEXT
 
 forth_immediate: ; ( -- )
@@ -468,13 +498,21 @@ forth_literal: ; ( n -- )
 .cfa:
 	FORTH_POP eax
 	mov edx, [forth_heap]
-	mov dword [edx], lit
+	mov dword [edx], forth_lit_impl.cfa
 	mov [edx+4], eax
 	add dword [forth_heap], 8
 	NEXT
 
-forth_lshift: ; ( x1 u -- x2 )
+forth_lit_impl:
 	dd forth_literal
+	db 0x00, 5, "[LIT]"
+.cfa:
+	lodsd
+	push eax
+	NEXT
+
+forth_lshift: ; ( x1 u -- x2 )
+	dd forth_lit_impl
 	db 0x00, 6, "LSHIFT"
 .cfa:
 	FORTH_POP ecx
@@ -493,8 +531,21 @@ forth_minus: ; ( a b -- a-b )
 	push eax
 	NEXT
 
-forth_multiply: ; ( a b -- a*b )
+forth_muldivmod: ; ( a b c -- a*b%c a*b/c )
 	dd forth_minus
+	db 0x00, 5, "*/MOD"
+.cfa:
+	FORTH_POP_CHK 3
+	pop ecx
+	mov eax, [esp+4]
+	mul dword [esp]
+	div ecx
+	mov [esp+4], edx
+	mov [esp], eax
+	NEXT
+
+forth_multiply: ; ( a b -- a*b )
+	dd forth_muldivmod
 	db 0x00, 1, "*"
 .cfa:
 	FORTH_POP_CHK 2
@@ -511,14 +562,8 @@ forth_negate: ; ( -- )
 	neg dword [esp]
 	NEXT
 
-forth_next:
-	dd forth_negate
-	db 0x00, 4, "NEXT"
-.cfa:
-	NEXT
-
 forth_one_plus: ; ( u -- u )
-	dd forth_multiply
+	dd forth_negate
 	db 0x00, 2, "1+"
 .cfa:
 	FORTH_POP_CHK 1
@@ -611,13 +656,13 @@ forth_quit: ; ( R: x* -- )
 	jz .skip_nl
 	call console_print_newline
 .skip_nl:
-	mov ecx, 2
+	mov ecx, 3
 	mov edi, .ok
 	call console_print_string
 	call console_print_newline
 .skip_ok:
 	NEXT
-.ok: db "ok"
+.ok: db " ok"
 .enter:
 	JMP_ENTER
 .pfa:

@@ -12,8 +12,8 @@ UNITS += io/kbd
 UNITS += io/ps2
 UNITS += io/scancode_set_1
 UNITS += ipb
+UNITS += kernel/builtins
 UNITS += kernel/interpret
-UNITS += kernel/kernel
 UNITS += kernel/parse
 UNITS += kernel/startup
 UNITS += kernel/utils
@@ -66,8 +66,8 @@ tmp/%.o: src/%.asm
 	@mkdir -p $(dir $@)
 	nasm -felf -o $@ $< $(NASMFLAGS)
 
-tmp/kernel/kernel.o: src/kernel/common.inc
+tmp/io/scancode_set_1.o: src/io/keycodes.inc
+tmp/kernel/builtins.o: src/kernel/common.inc
 tmp/kernel/startup.o: src/forth/startup.f
 tmp/kernel/utils.o: src/kernel/common.inc
-tmp/io/scancode_set_1.o: src/io/keycodes.inc
 tmp/x86/idt.o: src/debug/debug.inc

@@ -7,9 +7,9 @@ extern console_refresh
 extern find
 extern forth_exit.cfa
 extern forth_heap
+extern forth_lit_impl.cfa
 extern forth_state
 extern is_number
-extern lit
 extern parse_number
 extern parse_string
 extern set_parse_buffer
@@ -88,7 +88,7 @@ interpret:
 
 	call parse_number
 	mov edx, [forth_heap]
-	mov dword [edx], lit
+	mov dword [edx], forth_lit_impl.cfa
 	mov [edx+4], eax
 	add dword [forth_heap], 8
 	jmp .loop

@@ -1,5 +1,7 @@
 bits 32
 
+extern halt
+
 global idt
 global idt_init
 global idt_set
@@ -38,6 +40,9 @@ idt_init:
 	write pic2_data, 0xff ; Disable all IRQs
 
 	; Set a few exception handlers.
+	mov eax, 0 ; Divide-By-Zero
+	mov ecx, de_handler
+	call idt_set
 	mov eax, 3 ; Breakpoint
 	mov ecx, bp_handler
 	call idt_set
@@ -68,6 +73,11 @@ idt_set:
 	mov word [idt+6+eax*8], cx
 	ret
 
+; The Divide-By-Zero handler.
+de_handler:
+	debug "/0!"
+	jmp halt
+
 ; The Breakpoint handler.
 bp_handler:
 	debug "Breakpoint!"
@@ -91,11 +101,6 @@ gp_handler:
 ; The Page Fault handler.
 pf_handler:
 	debug "Page Fault!"
-	jmp halt
-
-halt:
-	cli
-	hlt
 	jmp halt
 
 [section .data]
