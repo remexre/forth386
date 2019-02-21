@@ -44,6 +44,9 @@ idt_init:
 	mov eax, 0 ; Divide-By-Zero
 	mov ecx, de_handler
 	call idt_set
+	mov eax, 2 ; Non-Maskable Interrupt
+	mov ecx, nmi_handler
+	call idt_set
 	mov eax, 3 ; Breakpoint
 	mov ecx, bp_handler
 	call idt_set
@@ -76,7 +79,13 @@ idt_set:
 
 ; The Divide-By-Zero handler.
 de_handler:
+	add esp, 12
 	jmp illegal_division
+
+; The Non-Maskable Interrupt handler.
+nmi_handler:
+	debug "NMI!"
+	iret
 
 ; The Breakpoint handler.
 bp_handler:
