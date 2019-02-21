@@ -68,6 +68,7 @@ tmp/%.o: src/%.asm
 
 tmp/io/scancode_set_1.o: src/io/keycodes.inc
 tmp/kernel/builtins.o: src/kernel/common.inc
+tmp/kernel/startup.o: src/forth/std.f
 tmp/kernel/startup.o: src/forth/startup.f
 tmp/kernel/utils.o: src/kernel/common.inc
 tmp/x86/idt.o: src/debug/debug.inc

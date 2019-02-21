@@ -108,9 +108,12 @@ interpret:
 	jmp forth_exit.cfa
 
 .word_not_found:
-	call word_not_found
+	mov esi, .word_not_found_after_addr
+	jmp word_not_found
+.word_not_found_after:
 	mov byte [ok], 0
 	jmp .done
+.word_not_found_after_addr: dd .word_not_found_after
 
 [section .bss]
 

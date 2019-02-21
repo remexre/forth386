@@ -1,6 +1,7 @@
 bits 32
 
 extern halt
+extern illegal_division
 
 global idt
 global idt_init
@@ -75,8 +76,7 @@ idt_set:
 
 ; The Divide-By-Zero handler.
 de_handler:
-	debug "/0!"
-	jmp halt
+	jmp illegal_division
 
 ; The Breakpoint handler.
 bp_handler:

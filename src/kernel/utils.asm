@@ -14,6 +14,7 @@ global capitalize
 global contains
 global enter
 global find
+global illegal_division
 global is_number
 global missing_name
 global panic
@@ -214,6 +215,15 @@ parse_number:
 	xor edx, edx
 	jmp .loop_next
 
+; A divide-by-zero error or a quotient out of bounds error.
+illegal_division:
+	mov edi, .str
+	mov ecx, 17
+	call console_print_string
+	call console_print_newline
+	jmp forth_quit.cfa
+.str: db "Illegal division!"
+
 ; The handler for a missing name.
 missing_name:
 	mov edi, .str
@@ -296,7 +306,7 @@ word_not_found:
 	call console_print_string
 	call console_print_newline
 	call console_refresh
-	ret
+	NEXT
 .str: db "Word not found: "
 
 [section .bss]

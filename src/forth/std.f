@@ -7,6 +7,7 @@
 : 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
 
 : */ ( a b c -- a*b/c ) */MOD NIP ;
+: /   ( a b -- a/b ) /MOD DROP ;
 : MOD ( a b -- a%b ) /MOD NIP ;
 
 : IF [ ' [IF] CFA ] LITERAL , HERE 0 , ; IMMEDIATE
