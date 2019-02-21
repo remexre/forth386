@@ -31,6 +31,7 @@ global forth_lit_impl.cfa
 global forth_quit.cfa
 global forth_state
 global forth_to_in
+global forth_zero_equal
 
 %include "src/kernel/common.inc"
 

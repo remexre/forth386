@@ -1,6 +1,13 @@
 bits 32
 
+extern forth_dictionary
+extern forth_heap
+extern forth_state
+extern forth_zero_equal
+extern halt
+extern heap_start
 extern interpret
+extern ok
 extern panic
 extern set_parse_buffer
 
@@ -11,12 +18,36 @@ global ctrl_alt_delete
 
 ; Performs a cold start.
 cold:
+	mov dword [forth_dictionary], forth_zero_equal
+	mov dword [forth_heap], heap_start
+	mov dword [forth_state], 0
+
+	mov ecx, forth_std_len
+	mov edi, forth_std
+	call set_parse_buffer
+	mov esi, .std_done_addr
+	jmp interpret
+
+.std_done:
+	mov al, [ok]
+	test al, al
+	jz panic
+
 	mov ecx, startup_len
 	mov edi, startup
 	call set_parse_buffer
-	mov esi, .addr_of_panic
+	mov esi, .startup_done_addr
 	jmp interpret
-.addr_of_panic: dd panic
+
+.startup_done:
+	mov al, [ok]
+	test al, al
+	jz panic
+
+	jmp halt
+
+.startup_done_addr: dd .startup_done
+.std_done_addr: dd .std_done
 
 ; The break handler.
 brk:
@@ -36,6 +67,10 @@ ctrl_alt_delete:
 	jmp ctrl_alt_delete
 
 [section .startup]
+
+forth_std:
+incbin "src/forth/std.f"
+forth_std_len equ $-forth_std
 
 startup:
 incbin "src/forth/startup.f"
