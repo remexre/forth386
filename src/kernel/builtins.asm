@@ -563,8 +563,22 @@ forth_negate: ; ( -- )
 	neg dword [esp]
 	NEXT
 
-forth_one_plus: ; ( u -- u )
+forth_not_equal: ; ( x1 x2 -- flag )
 	dd forth_negate
+	db 0x00, 2, "<>"
+.cfa:
+	FORTH_POP_CHK 2
+	pop ecx
+	mov eax, [esp]
+	xor edx, edx
+	cmp eax, ecx
+	sete dl
+	dec edx
+	mov [esp], edx
+	NEXT
+
+forth_one_plus: ; ( u -- u )
+	dd forth_not_equal
 	db 0x00, 2, "1+"
 .cfa:
 	FORTH_POP_CHK 1
@@ -881,7 +895,7 @@ forth_word_fetch: ; ( w-addr -- word )
 .cfa:
 	FORTH_POP eax
 	mov ax, [eax]
-	and eax, 0xff
+	and eax, 0xffff
 	push eax
 	NEXT
 

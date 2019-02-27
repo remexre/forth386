@@ -7,8 +7,8 @@
 : 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
 
 : */ ( a b c -- a*b/c ) */MOD NIP ;
-: /   ( a b -- a/b ) /MOD DROP ;
-: MOD ( a b -- a%b ) /MOD NIP ;
+: /   ( a b -- a/b ) /MOD NIP ;
+: MOD ( a b -- a%b ) /MOD DROP ;
 
 : IF [ ' [IF] CFA ] LITERAL , HERE 0 , ; IMMEDIATE
 : ELSE [ ' [ELSE] CFA ] LITERAL , HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE
@@ -21,8 +21,8 @@ CREATE ." DOES>ENTER ' S" CFA , ]
   STATE @ IF [ ' TYPE CFA ] LITERAL , ELSE TYPE ENDIF EXIT
   [ UNSMUDGE IMMEDIATE
 
-\ : CONSTANT CREATE #68 c, , #ac c, #ff c, #e0 c, UNSMUDGE ;
-\ : VARIABLE CREATE 1 CELLS ALLOT ;
+\ : CONSTANT CREATE , DOES> @ UNSMUDGE ;
+\ : VARIABLE CREATE 1 CELLS ALLOT UNSMUDGE ;
 
 : CHAR WORD DROP c@ ;
 : BL $20 ; \ TODO $20 CONSTANT BL
@@ -30,7 +30,8 @@ CREATE ." DOES>ENTER ' S" CFA , ]
 \ TODO SPACES
 
 \ TODO This is absurdly slow -- is there a dirty hack that'd make it more
-\ reasonable?
+\ reasonable? (On the other hand, writing to the screen is perhaps reasonable
+\ as a bottleneck...)
 : . ( X -- )
   [ $123456 #12 + @ ] literal w@
   #80 MOD IF SPACE ENDIF

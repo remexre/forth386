@@ -10,10 +10,10 @@
 : cls-loop
   dup
   [ $123456 #8 + @ #80 #25 * + ] literal
-  = if dup 0 swap c! 1+ recurse endif ;
+  <> if dup 0 swap c! 1+ recurse endif ;
 : cls
   [ $123456 #8 + @ ] literal cls-loop drop
-  0 [ $123456 #12 + @ ] literal w! ;
+  0 [ $123456 #12 + @ ] literal w! refresh ;
 
 : set-color [ $123456 #16 + @ ] literal c! refresh ;
 
@@ -150,12 +150,10 @@
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit crr ;
 
-\ : DOES> [ S" [DOES>]" FIND #13 + ] LITERAL , ;
-\ 1 . SPACE HERE . CR
-\ : CONST CREATE , DOES> @ ;
-\ 2 . SPACE HERE . CR
-\ 123 CONST X
-\ 3 . SPACE HERE . CR
+: DOES> [ ' [DOES>] CFA ] LITERAL , ;
+: CONST CREATE , DOES> @ UNSMUDGE ;
+latest hexdump
+123 CONST X
 
 \ $123456 CONSTANT IPB
 \ ." IPB-CHECK" IPB @ $00425049 2DUP = . . . ;
