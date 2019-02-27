@@ -6,6 +6,8 @@
 : 2DROP ( X1 X2 --             ) DROP DROP      ;
 : 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
 
+\ : DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
+
 : */ ( a b c -- a*b/c ) */MOD NIP ;
 : /   ( a b -- a/b ) /MOD NIP ;
 : MOD ( a b -- a%b ) /MOD DROP ;

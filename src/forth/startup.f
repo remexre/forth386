@@ -150,6 +150,10 @@
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit crr ;
 
+\ TODO This only works in QEMU -- in real life, this needs to be read out of an
+\ ACPI table.
+: BYE 0 #f4 OUTB ;
+
 : DOES> [ ' [DOES>] CFA ] LITERAL , ;
 : CONST CREATE , DOES> @ UNSMUDGE ;
 latest hexdump

@@ -147,8 +147,23 @@ forth_comma: ; ( n -- )
 	mov [forth_heap], edx
 	NEXT
 
-forth_cr: ; ( -- a-addr )
+forth_cpuid: ; ( ecx eax -- edx ecx ebx eax )
 	dd forth_comma
+	db 0x00, 5, "CPUID"
+.cfa:
+	FORTH_POP eax
+	FORTH_POP ecx
+	xor ebx, ebx
+	xor edx, edx
+	cpuid
+	push edx
+	push ecx
+	push ebx
+	push eax
+	NEXT
+
+forth_cr: ; ( -- a-addr )
+	dd forth_cpuid
 	db 0x00, 2, "CR"
 .cfa:
 	call console_print_newline
