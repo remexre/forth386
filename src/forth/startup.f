@@ -174,6 +174,8 @@
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
+." Finished startup.f!" cr
+
 reasonable-taste
 HEX
 ABORT
