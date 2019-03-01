@@ -176,6 +176,11 @@
 
 ." Finished startup.f!" cr
 
+." About to test DO..." cr
+\ : test 6 1 do i . loop ;
+\ test cr
+." Did 1 2 3 4 5 get printed?" cr
+
 reasonable-taste
 HEX
 ABORT

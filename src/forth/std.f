@@ -16,10 +16,9 @@
 CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
 
 \ Note that this is not at all related to the [COMPILE] in the Forth standard;
-\ this is instead a version of [COMPILE] that appends to the execution
-\ semantics of the word being compiled the same semantics that would occur if
-\ COMPILE were to occur in an interpretive context. Treat the following as
-\ equivalent:
+\ this is instead a version of COMPILE that appends to the execution semantics
+\ of the word being defined the same semantics that would occur if COMPILE were
+\ to occur in an interpretive context. Treat the following as equivalent:
 \ : FOO [ ' BAR CFA ] LITERAL , ;
 \ : FOO [COMPILE] BAR ;
 : [COMPILE]
@@ -58,6 +57,8 @@ CREATE ." DOES>ENTER COMPILE S" ]
 \ TODO This is absurdly slow -- is there a dirty hack that'd make it more
 \ reasonable? (On the other hand, writing to the screen is perhaps reasonable
 \ as a bottleneck...)
+\ NOTE The dirty hack is to use a conditional jump instead of an IF. That'd
+\ probably involve a CODE word, though...
 : . ( X -- )
   [ $123456 #12 + @ ] literal w@
   #80 MOD IF SPACE ENDIF

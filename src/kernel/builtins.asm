@@ -714,8 +714,18 @@ forth_quote: ; ( "name" -- xt )
 	push eax
 	NEXT
 
-forth_recurse: ; ( -- )
+forth_rdtsc:
 	dd forth_quote
+	db 0x00, 5, "RDTSC"
+.cfa:
+	cpuid
+	rdtsc
+	push edx
+	push eax
+	NEXT
+
+forth_recurse: ; ( -- )
+	dd forth_rdtsc
 	db 0x01, 7, "RECURSE"
 .cfa:
 	xor ecx, ecx
