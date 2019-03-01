@@ -27,7 +27,7 @@ global forth_base
 global forth_dictionary
 global forth_exit.cfa
 global forth_heap
-global forth_lit_impl.cfa
+global forth_literal_impl.cfa
 global forth_quit.cfa
 global forth_state
 global forth_to_in
@@ -514,21 +514,21 @@ forth_literal: ; ( n -- )
 .cfa:
 	FORTH_POP eax
 	mov edx, [forth_heap]
-	mov dword [edx], forth_lit_impl.cfa
+	mov dword [edx], forth_literal_impl.cfa
 	mov [edx+4], eax
 	add dword [forth_heap], 8
 	NEXT
 
-forth_lit_impl:
+forth_literal_impl:
 	dd forth_literal
-	db 0x00, 5, "[LIT]"
+	db 0x00, 9, "[LITERAL]"
 .cfa:
 	lodsd
 	push eax
 	NEXT
 
 forth_lshift: ; ( x1 u -- x2 )
-	dd forth_lit_impl
+	dd forth_literal_impl
 	db 0x00, 6, "LSHIFT"
 .cfa:
 	FORTH_POP ecx

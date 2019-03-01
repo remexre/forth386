@@ -20,9 +20,13 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
 \ semantics of the word being compiled the same semantics that would occur if
 \ COMPILE were to occur in an interpretive context. Treat the following as
 \ equivalent:
-\ CREATE FOO DOES>ENTER ' . TODO . ] EXIT [ UNSMUDGE
-\ : FOO [COMPILE] . ;
-CREATE [COMPILE] DOES>ENTER ] EXIT [ UNSMUDGE IMMEDIATE
+\ : FOO [ ' BAR CFA ] LITERAL , ;
+\ : FOO [COMPILE] BAR ;
+: [COMPILE]
+  [ ' [LITERAL] CFA ] LITERAL ,
+  COMPILE ' CFA ,
+  [ ' , CFA ] LITERAL ,
+  ; IMMEDIATE
 
 : IF [ ' [IF] CFA ] LITERAL , HERE 0 , ; IMMEDIATE
 : ELSE [ ' [ELSE] CFA ] LITERAL , HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE

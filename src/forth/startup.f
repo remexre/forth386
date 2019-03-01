@@ -150,10 +150,6 @@
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit crr ;
 
-\ TODO This only works in QEMU -- in real life, this needs to be read out of an
-\ ACPI table.
-: BYE 0 #f4 OUTB ;
-
 \ : DOES> [ ' [DOES>] CFA ] LITERAL , ; IMMEDIATE
 \ : CONST CREATE , DOES> @ UNSMUDGE ;
 \ ' DOES> hexdump
@@ -177,9 +173,6 @@
 
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
-
-: foo 3 0 int3 do . loop ;
-latest hexdump
 
 reasonable-taste
 HEX
