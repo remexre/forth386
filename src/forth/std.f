@@ -12,6 +12,18 @@
 : /   ( a b -- a/b ) /MOD NIP ;
 : MOD ( a b -- a%b ) /MOD DROP ;
 
+\ COMPILE must by CREATEd manually, since ' is an immediate word.
+CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
+
+\ Note that this is not at all related to the [COMPILE] in the Forth standard;
+\ this is instead a version of [COMPILE] that appends to the execution
+\ semantics of the word being compiled the same semantics that would occur if
+\ COMPILE were to occur in an interpretive context. Treat the following as
+\ equivalent:
+\ CREATE FOO DOES>ENTER ' . TODO . ] EXIT [ UNSMUDGE
+\ : FOO [COMPILE] . ;
+CREATE [COMPILE] DOES>ENTER ] EXIT [ UNSMUDGE IMMEDIATE
+
 : IF [ ' [IF] CFA ] LITERAL , HERE 0 , ; IMMEDIATE
 : ELSE [ ' [ELSE] CFA ] LITERAL , HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE
 : ENDIF HERE SWAP ! ; IMMEDIATE
@@ -26,15 +38,10 @@
 
 \ : DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
 
-\ ." must by CREATEd manually, since S"'s status as an immediate word means the
-\ rest of the definition would be parsed as part of the string, rather than
-\ executing S" when ." is run.
-CREATE ." DOES>ENTER ' S" CFA , ]
+\ ." must by CREATEd manually, since S" is immediate.
+CREATE ." DOES>ENTER COMPILE S" ]
   STATE @ IF [ ' TYPE CFA ] LITERAL , ELSE TYPE ENDIF EXIT
   [ UNSMUDGE IMMEDIATE
-
-\ Same for COMPILE.
-\ CREATE COMPILE DOES>ENTER TODO ;
 
 \ : CONSTANT CREATE , DOES> @ UNSMUDGE ;
 \ : VARIABLE CREATE 1 CELLS ALLOT UNSMUDGE ;
