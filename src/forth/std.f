@@ -5,8 +5,8 @@
 : TUCK  ( X1 X2 -- X2 X1 X2    ) SWAP OVER      ;
 : 2DROP ( X1 X2 --             ) DROP DROP      ;
 : 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
-
-\ : DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
+: 2R>   ( -- X1 X2 ) ( R: X1 X2 -- ) R> R> SWAP ;
+: 2>R   ( X1 X2 -- ) ( R: -- X1 X2 ) SWAP R> R> ;
 
 : */ ( a b c -- a*b/c ) */MOD NIP ;
 : /   ( a b -- a/b ) /MOD NIP ;
@@ -16,12 +16,25 @@
 : ELSE [ ' [ELSE] CFA ] LITERAL , HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE
 : ENDIF HERE SWAP ! ; IMMEDIATE
 
+: [DO] ( limit first -- ) SWAP >R >R ;
+: [+LOOP] ( n -- ) ( R: limit first -- )
+  2R> 2 PICK + ROT DROP 2DUP 2>R = IF int3 ENDIF ;
+: [LOOP] ( n -- ) ( R: limit first -- ) 1 [+LOOP] ;
+
+: DO HERE [ ' [DO] CFA ] LITERAL , ; IMMEDIATE
+: LOOP [ ' [LOOP] CFA ] LITERAL , , ; IMMEDIATE
+
+\ : DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
+
 \ ." must by CREATEd manually, since S"'s status as an immediate word means the
 \ rest of the definition would be parsed as part of the string, rather than
 \ executing S" when ." is run.
 CREATE ." DOES>ENTER ' S" CFA , ]
   STATE @ IF [ ' TYPE CFA ] LITERAL , ELSE TYPE ENDIF EXIT
   [ UNSMUDGE IMMEDIATE
+
+\ Same for COMPILE.
+\ CREATE COMPILE DOES>ENTER TODO ;
 
 \ : CONSTANT CREATE , DOES> @ UNSMUDGE ;
 \ : VARIABLE CREATE 1 CELLS ALLOT UNSMUDGE ;

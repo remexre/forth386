@@ -154,10 +154,9 @@
 \ ACPI table.
 : BYE 0 #f4 OUTB ;
 
-: DOES> [ ' [DOES>] CFA ] LITERAL , ;
-: CONST CREATE , DOES> @ UNSMUDGE ;
-latest hexdump
-123 CONST X
+\ : DOES> [ ' [DOES>] CFA ] LITERAL , ; IMMEDIATE
+\ : CONST CREATE , DOES> @ UNSMUDGE ;
+\ ' DOES> hexdump
 
 \ $123456 CONSTANT IPB
 \ ." IPB-CHECK" IPB @ $00425049 2DUP = . . . ;
@@ -178,6 +177,9 @@ latest hexdump
 
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
+
+: foo 3 0 int3 do . loop ;
+latest hexdump
 
 reasonable-taste
 HEX
