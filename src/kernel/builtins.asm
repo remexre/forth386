@@ -31,7 +31,6 @@ global forth_literal_impl.cfa
 global forth_quit.cfa
 global forth_state
 global forth_to_in
-global forth_zero_equal
 
 %include "src/kernel/common.inc"
 
@@ -1007,21 +1006,10 @@ forth_zero_equal: ; ( x -- flag )
 	push eax
 	NEXT
 
-forth_debug_console_read_line: ; ( -- c-addr u )
-	dd forth_zero_equal
-	db 0x00, 3, "%RL"
-.cfa:
-	call console_read_line
-	mov eax, [input_buf]
-	push eax
-	mov eax, [input_len]
-	push eax
-	NEXT
-
 [section .data]
 
 forth_base: dd 10
-forth_dictionary: dd forth_debug_console_read_line
+forth_dictionary: dd forth_zero_equal
 forth_heap: dd heap_start
 forth_state: dd 0
 forth_to_in: dd 0

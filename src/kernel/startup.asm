@@ -10,6 +10,8 @@ extern set_parse_buffer
 
 global cold
 global ctrl_alt_delete
+global forth_std
+global forth_startup
 
 [section .text]
 
@@ -27,7 +29,7 @@ cold:
 	jz panic
 
 	mov ecx, startup_len
-	mov edi, startup
+	mov edi, forth_startup
 	call set_parse_buffer
 	mov esi, .startup_done_addr
 	jmp interpret
@@ -65,10 +67,12 @@ ctrl_alt_delete:
 
 forth_std:
 incbin "src/forth/std.f"
+db 0
 forth_std_len equ $-forth_std
 
-startup:
+forth_startup:
 incbin "src/forth/startup.f"
-startup_len equ $-startup
+db 0
+startup_len equ $-forth_startup
 
 ; vi: cc=80 ft=nasm

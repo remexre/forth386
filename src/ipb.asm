@@ -6,6 +6,8 @@ extern console
 extern cursor
 extern default_param_stack_top
 extern default_return_stack_top
+extern forth_std
+extern forth_startup
 extern idt
 
 global ipb
@@ -24,5 +26,7 @@ ipb:
 	dd idt
 .param_stack_top:  dd default_param_stack_top
 .return_stack_top: dd default_return_stack_top
+	dd forth_std
+	dd forth_startup
 
 ; vi: cc=80 ft=nasm

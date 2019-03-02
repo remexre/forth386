@@ -1,9 +1,6 @@
-: cls-loop
-  dup
-  [ $123456 #8 + @ #80 #25 * + ] literal
-  <> if dup 0 swap c! 1+ recurse endif ;
 : cls
-  [ $123456 #8 + @ ] literal cls-loop drop
+  [ #80 #25 * ] literal
+  0 do 0 i [ $123456 #8 + @ ] literal + c! loop
   0 [ $123456 #12 + @ ] literal w! refresh ;
 
 : set-color [ $123456 #16 + @ ] literal c! refresh ;
@@ -22,7 +19,7 @@
   dup $18 rshift hexdump-write-byte
   dup $10 rshift hexdump-write-byte
   dup  $8 rshift hexdump-write-byte
-                hexdump-write-byte ;
+                 hexdump-write-byte ;
 : hexdump-write-row ( addr -- )
   $b3 emit dup hexdump-write-dword $b3 emit
   \ This could benefit from a loop...
@@ -166,33 +163,7 @@
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
-: [DO] ( limit first -- ) ( R: -- i limit )
-  SWAP-STACKS R> R> ROT SWAP-STACKS ;
-: [+LOOP] ( n -- ) ( R: i limit -- )
-  SWAP-STACKS ROT ROT SWAP-STACKS
-  R> R> ROT + 2DUP =
-  IF 2DROP SWAP-STACKS 4 + SWAP-STACKS
-  ELSE >R >R SWAP-STACKS ROT SWAP-STACKS R> @ >R
-  ENDIF ;
-: I ( -- i ) ( R: i limit -- i limit )
-  SWAP-STACKS 2 PICK >R SWAP-STACKS ;
-
-: DO [COMPILE] [DO] HERE ; IMMEDIATE
-: LOOP [COMPILE] LITERAL 1 , [COMPILE] [+LOOP] , ; IMMEDIATE
-: +LOOP [COMPILE] [+LOOP] , ; IMMEDIATE
-
-: cls-do
-  [ $123456 #8 + @ #80 #25 * + ] literal
-  [ $123456 #8 + @ ] literal
-  do 0 i c! loop
-  0 [ $123456 #12 + @ ] literal w!
-  refresh ;
-
 ." Finished startup.f!" cr
-
-: test 5 0 do i . cr 1 +loop ;
-test cr
-." Did 0 1 2 3 4 get printed?" cr
 
 reasonable-taste
 
