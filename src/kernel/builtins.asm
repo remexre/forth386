@@ -570,7 +570,7 @@ forth_multiply: ; ( a b -- a*b )
 	mov [esp], eax
 	NEXT
 
-forth_negate: ; ( -- )
+forth_negate: ; ( x -- -x )
 	dd forth_multiply
 	db 0x00, 6, "NEGATE"
 .cfa:
@@ -578,8 +578,16 @@ forth_negate: ; ( -- )
 	neg dword [esp]
 	NEXT
 
-forth_not_equal: ; ( x1 x2 -- flag )
+forth_not: ; ( x -- ~x )
 	dd forth_negate
+	db 0x00, 3, "NOT"
+.cfa:
+	FORTH_POP_CHK 1
+	not dword [esp]
+	NEXT
+
+forth_not_equal: ; ( x1 x2 -- flag )
+	dd forth_not
 	db 0x00, 2, "<>"
 .cfa:
 	FORTH_POP_CHK 2
@@ -919,8 +927,15 @@ forth_type: ; ( c-addr u -- )
 .cfa.end:
 	NEXT
 
-forth_unsmudge: ; ( -- )
+forth_unsafe_goto: ; ( addr -- )
 	dd forth_type
+	db 0x00, 11, "UNSAFE-GOTO"
+.cfa:
+	FORTH_POP esi
+	NEXT
+
+forth_unsmudge: ; ( -- )
+	dd forth_unsafe_goto
 	db 0x00, 8, "UNSMUDGE"
 .cfa:
 	mov eax, [forth_dictionary]

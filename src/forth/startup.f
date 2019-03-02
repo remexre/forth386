@@ -96,6 +96,8 @@
 ." Finished startup.f!" cr
 
 reasonable-taste
+' spaces hd
+: x 0 spaces ." foo" ;
 
 \ Start the REPL.
 ABORT
