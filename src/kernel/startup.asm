@@ -44,7 +44,9 @@ cold:
 	test al, al
 	jz panic
 
+	mov edi, .str_startup_exited
 	jmp halt
+.str_startup_exited: db "src/forth/startup.f exited", 0
 
 .startup_done_addr: dd .startup_done
 .std_done_addr: dd .std_done

@@ -20,6 +20,7 @@
 : hacker-mode $0a set-color ;
 : hackar-mode $82 set-color ;
 : reasonable-taste $0f set-color ;
+: macos-user-or-summat $70 set-color ;
 
 : hexdump-write-nybble ( u -- ) $f and s" 0123456789abcdef" drop + c@ emit ;
 : hexdump-write-byte ( u -- )
@@ -188,17 +189,17 @@
 
 : DO HERE [COMPILE] [DO] ; IMMEDIATE
 : LOOP [COMPILE] [LOOP] , ; IMMEDIATE
+: +LOOP [COMPILE] [+LOOP] , ; IMMEDIATE
 
 ." Finished startup.f!" cr
 
 ." About to test DO..." cr
-: test 6 1 do i . loop ;
-latest hexdump
-test cr
-." Did 1 2 3 4 5 get printed?" cr
+: test 6 1 do i . 1 +loop ;
+." test = 0x" ' test .nospace cr
+\ test cr
+\ ." Did 1 2 3 4 5 get printed?" cr
 
 reasonable-taste
-HEX
 ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :
