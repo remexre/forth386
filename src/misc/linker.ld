@@ -23,10 +23,9 @@ SECTIONS {
 	.startup : { KEEP(*(.startup)) }
 
 	. = 2M;
-	.param_stack : { *(.param_stack) }
-
-	. = 3M;
 	.return_stack : { *(.return_stack) }
-
+	.param_stack : { *(.param_stack) }
 	heap_start = .;
+	.heap : { *(.heap) }
+	. = 3M;
 }

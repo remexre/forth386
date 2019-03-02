@@ -80,12 +80,16 @@ halt:
 
 [section .param_stack nobits]
 
-default_param_stack: resb 0x100000
+resb 0x40000
 default_param_stack_top:
 
 [section .return_stack nobits]
 
-default_return_stack: resb 0x100000
+resb 0x40000
 default_return_stack_top:
+
+[section .heap nobits]
+
+resb 0x80000
 
 ; vi: cc=80 ft=nasm
