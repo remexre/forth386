@@ -95,22 +95,30 @@ bp_handler:
 ; The Invalid Opcode handler.
 ud_handler:
 	debug "Invalid Opcode!"
+	mov edi, .str
 	jmp halt
+.str: db "Invalid Opcode", 0
 
 ; The Double Fault handler.
 df_handler:
 	debug "Double Fault!"
+	mov edi, .str
 	jmp halt
+.str: db "Double Fault", 0
 
 ; The General Protection Fault handler.
 gp_handler:
 	debug "General Protection Fault!"
+	mov edi, .str
 	jmp halt
+.str: db "General Protection Fault", 0
 
 ; The Page Fault handler.
 pf_handler:
 	debug "Page Fault!"
+	mov edi, .str
 	jmp halt
+.str: db "Page Fault", 0
 
 [section .data]
 

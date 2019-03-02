@@ -31,20 +31,7 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
 : ELSE [COMPILE] [ELSE] HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE
 : ENDIF HERE SWAP ! ; IMMEDIATE
 
-: [DO] ( limit first -- ) SWAP >R >R ;
-: [+LOOP] ( n -- ) ( R: limit first -- )
-  2R> 2 PICK + ROT DROP 2DUP 2>R = IF int3 ENDIF ;
-: [LOOP] ( n -- ) ( R: limit first -- ) 1 [+LOOP] ;
-
-: DO HERE [COMPILE] [DO] ; IMMEDIATE
-: LOOP [COMPILE] [LOOP] , ; IMMEDIATE
-
 \ : DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
-
-\ ." must by CREATEd manually, since S" is immediate.
-CREATE ." DOES>ENTER COMPILE S" ]
-  STATE @ IF [COMPILE] TYPE ELSE TYPE ENDIF EXIT
-  [ UNSMUDGE IMMEDIATE
 
 \ : CONSTANT CREATE , DOES> @ UNSMUDGE ;
 \ : VARIABLE CREATE 1 CELLS ALLOT UNSMUDGE ;
@@ -54,15 +41,13 @@ CREATE ." DOES>ENTER COMPILE S" ]
 : SPACE BL EMIT ;
 \ TODO SPACES
 
-\ TODO This is absurdly slow -- is there a dirty hack that'd make it more
-\ reasonable? (On the other hand, writing to the screen is perhaps reasonable
-\ as a bottleneck...)
-\ NOTE The dirty hack is to use a conditional jump instead of an IF. That'd
-\ probably involve a CODE word, though...
 : . ( X -- )
+  \ TODO This is slower than it should be -- is it worth it to do bit-fuckery
+  \ to optimize the division, and use a conditional jump instead of an IF?
   [ $123456 #12 + @ ] literal w@
   #80 MOD IF SPACE ENDIF
   .NOSPACE ;
+: ." COMPILE S" STATE @ IF [COMPILE] TYPE ELSE TYPE ENDIF ; IMMEDIATE
 
 : CRR CR REFRESH ;
 : HALT HLT RECURSE ;

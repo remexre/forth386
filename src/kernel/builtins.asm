@@ -1,7 +1,6 @@
 bits 32
 
 extern capitalize
-extern color
 extern console_print_newline
 extern console_print_number
 extern console_print_string
@@ -10,15 +9,14 @@ extern console_refresh
 extern cursor
 extern enter
 extern find
-extern halt
 extern heap_start
 extern interpret
+extern ipb.param_stack_top
+extern ipb.return_stack_top
 extern missing_name
 extern ok
-extern param_stack_top
 extern parse_string
 extern read_to_quote
-extern return_stack_top
 extern underflow
 extern uninited_word
 extern word_not_found
@@ -41,7 +39,7 @@ forth_abort: ; ( i * x -- )
 	dd 0
 	db 0x00, 5, "ABORT"
 .cfa:
-	mov esp, param_stack_top
+	mov esp, [ipb.param_stack_top]
 	jmp forth_quit.cfa
 
 forth_allot : ; ( n -- )
@@ -151,8 +149,9 @@ forth_cpuid: ; ( ecx eax -- edx ecx ebx eax )
 	dd forth_comma
 	db 0x00, 5, "CPUID"
 .cfa:
-	FORTH_POP eax
 	FORTH_POP ecx
+	FORTH_POP eax ; `FORTH_POP ecx` trashes eax.
+	xchg eax, ecx
 	xor ebx, ebx
 	xor edx, edx
 	cpuid
@@ -217,7 +216,7 @@ forth_depth: ; ( -- u )
 	dd forth_decimal
 	db 0x00, 5, "DEPTH"
 .cfa:
-	mov eax, param_stack_top
+	mov eax, [ipb.param_stack_top]
 	sub eax, esp
 	shr eax, 2
 	push eax
@@ -269,7 +268,7 @@ forth_dot_s: ; ( -- )
 	mov ecx, 1
 	mov edi, .pfa
 	call console_print_string
-	mov eax, param_stack_top
+	mov eax, [ipb.param_stack_top]
 	sub eax, esp
 	shr eax, 2
 	call console_print_number
@@ -278,7 +277,7 @@ forth_dot_s: ; ( -- )
 	call console_print_string
 
 	push esi
-	mov esi, param_stack_top
+	mov esi, [ipb.param_stack_top]
 .loop:
 	sub esi, 4
 	cmp esi, esp
@@ -648,7 +647,7 @@ forth_pick: ; ( xu ... x0 u -- xu ... x0 xu )
 	db 0x00, 4, "PICK"
 .cfa:
 	FORTH_POP eax
-	mov ecx, param_stack_top
+	mov ecx, [ipb.param_stack_top]
 	lea edx, [eax+1]
 	shl edx, 2
 	sub ecx, edx
@@ -671,7 +670,7 @@ forth_quit: ; ( R: x* -- )
 	dd forth_plus
 	db 0x00, 4, "QUIT"
 .cfa:
-	mov ebp, return_stack_top
+	mov ebp, [ipb.return_stack_top]
 	mov dword [forth_state], 0
 	call console_read_line
 	mov eax, .enter
@@ -866,8 +865,18 @@ forth_swap: ; ( x y -- y x )
 	push eax
 	NEXT
 
-forth_to_r: ; ( x -- ) ( R: -- x )
+forth_swap_stacks: ; ( j * x -- i * x ) ( R: i * x -- j * x )
 	dd forth_swap
+	db 0x00, 11, "SWAP-STACKS"
+.cfa:
+	mov eax, [ipb.param_stack_top]
+	xchg eax, [ipb.return_stack_top]
+	mov [ipb.param_stack_top], eax
+	xchg esp, ebp
+	NEXT
+
+forth_to_r: ; ( x -- ) ( R: -- x )
+	dd forth_swap_stacks
 	db 0x00, 2, ">R"
 .cfa:
 	FORTH_POP eax

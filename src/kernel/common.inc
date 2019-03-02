@@ -30,8 +30,11 @@
 %endmacro
 
 %macro FORTH_POP_CHK 1
-	cmp esp, param_stack_top-(4*%1)
+	extern ipb.param_stack_top
 	extern underflow
+	mov eax, [ipb.param_stack_top]
+	sub eax, 4*%1
+	cmp esp, eax
 	ja underflow
 %endmacro
 

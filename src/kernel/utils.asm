@@ -7,7 +7,6 @@ extern console_refresh
 extern forth_base
 extern forth_dictionary
 extern forth_quit.cfa
-extern forth_to_in
 extern parse_string
 
 global capitalize

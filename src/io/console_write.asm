@@ -1,6 +1,5 @@
 bits 32
 
-extern color
 extern console
 extern cursor
 extern forth_base

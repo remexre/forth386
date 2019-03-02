@@ -174,11 +174,27 @@
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
+: [DO] ( limit first -- ) ( R: -- first limit )
+  SWAP-STACKS R> R> ROT SWAP-STACKS ;
+: [+LOOP] ( n -- ) ( R: first limit -- )
+  SWAP-STACKS ROT ROT SWAP-STACKS
+  R> R> ROT + 2DUP =
+  IF 2DROP 4 +
+  ELSE >R >R SWAP-STACKS ROT ( TODO swap raddr for naddr ) SWAP-STACKS
+  ENDIF ;
+: [LOOP] ( -- ) ( R: first limit -- ) 1 [+LOOP] ;
+: I ( -- x ) ( R: first limit -- first limit )
+  SWAP-STACKS 2 PICK >R SWAP-STACKS ;
+
+: DO HERE [COMPILE] [DO] ; IMMEDIATE
+: LOOP [COMPILE] [LOOP] , ; IMMEDIATE
+
 ." Finished startup.f!" cr
 
 ." About to test DO..." cr
-\ : test 6 1 do i . loop ;
-\ test cr
+: test 6 1 do i . loop ;
+latest hexdump
+test cr
 ." Did 1 2 3 4 5 get printed?" cr
 
 reasonable-taste
