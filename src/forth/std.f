@@ -38,7 +38,7 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
   SWAP-STACKS R> R> ROT 4 + SWAP-STACKS ;
 : [?DO] ( limit first -- ) ( R: -- i limit )
   2DUP =
-  IF 2DROP INT3 R> @ >R
+  IF 2DROP R> @ >R
   ELSE [ ' [DO] CFA 5 + ] LITERAL UNSAFE-GOTO
   ENDIF ;
 : [+LOOP] ( n -- ) ( R: i limit -- )
