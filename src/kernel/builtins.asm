@@ -10,6 +10,8 @@ extern cursor
 extern enter
 extern find
 extern heap_start
+extern input_buf
+extern input_len
 extern interpret
 extern ipb.param_stack_top
 extern ipb.return_stack_top
@@ -855,8 +857,22 @@ forth_store: ; ( x a-addr -- )
 	mov [ecx], eax
 	NEXT
 
-forth_swap: ; ( x y -- y x )
+forth_strlen: ; ( c-addr -- x )
 	dd forth_store
+	db 0x00, 6, "STRLEN"
+.cfa:
+	FORTH_POP_CHK 1
+	mov edi, [esp]
+	xor eax, eax
+	xor ecx, ecx
+	dec ecx
+	repnz scasb
+	sub edi, [esp]
+	mov [esp], edi
+	NEXT
+
+forth_swap: ; ( x y -- y x )
+	dd forth_strlen
 	db 0x00, 4, "SWAP"
 .cfa:
 	FORTH_POP_CHK 2
@@ -991,10 +1007,21 @@ forth_zero_equal: ; ( x -- flag )
 	push eax
 	NEXT
 
+forth_debug_console_read_line: ; ( -- c-addr u )
+	dd forth_zero_equal
+	db 0x00, 3, "%RL"
+.cfa:
+	call console_read_line
+	mov eax, [input_buf]
+	push eax
+	mov eax, [input_len]
+	push eax
+	NEXT
+
 [section .data]
 
 forth_base: dd 10
-forth_dictionary: dd forth_zero_equal
+forth_dictionary: dd forth_debug_console_read_line
 forth_heap: dd heap_start
 forth_state: dd 0
 forth_to_in: dd 0

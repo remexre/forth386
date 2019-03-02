@@ -1,12 +1,3 @@
-(
-: cls
-  [ $123456 #8 + @ #80 #25 * + ] literal
-  [ $123456 #8 + @ ] literal
-  do 0 i c! loop
-  0 [ $123456 #12 + @ ] literal w!
-  refresh ;
-)
-
 : cls-loop
   dup
   [ $123456 #8 + @ #80 #25 * + ] literal
@@ -175,31 +166,37 @@
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
-: [DO] ( limit first -- ) ( R: -- first limit )
+: [DO] ( limit first -- ) ( R: -- i limit )
   SWAP-STACKS R> R> ROT SWAP-STACKS ;
-: [+LOOP] ( n -- ) ( R: first limit -- )
+: [+LOOP] ( n -- ) ( R: i limit -- )
   SWAP-STACKS ROT ROT SWAP-STACKS
   R> R> ROT + 2DUP =
-  IF 2DROP 4 +
-  ELSE >R >R SWAP-STACKS ROT ( TODO swap raddr for naddr ) SWAP-STACKS
+  IF 2DROP SWAP-STACKS 4 + SWAP-STACKS
+  ELSE >R >R SWAP-STACKS ROT SWAP-STACKS R> @ >R
   ENDIF ;
-: [LOOP] ( -- ) ( R: first limit -- ) 1 [+LOOP] ;
-: I ( -- x ) ( R: first limit -- first limit )
+: I ( -- i ) ( R: i limit -- i limit )
   SWAP-STACKS 2 PICK >R SWAP-STACKS ;
 
-: DO HERE [COMPILE] [DO] ; IMMEDIATE
-: LOOP [COMPILE] [LOOP] , ; IMMEDIATE
+: DO [COMPILE] [DO] HERE ; IMMEDIATE
+: LOOP [COMPILE] LITERAL 1 , [COMPILE] [+LOOP] , ; IMMEDIATE
 : +LOOP [COMPILE] [+LOOP] , ; IMMEDIATE
+
+: cls-do
+  [ $123456 #8 + @ #80 #25 * + ] literal
+  [ $123456 #8 + @ ] literal
+  do 0 i c! loop
+  0 [ $123456 #12 + @ ] literal w!
+  refresh ;
 
 ." Finished startup.f!" cr
 
-." About to test DO..." cr
-: test 6 1 do i . 1 +loop ;
-." test = 0x" ' test .nospace cr
-\ test cr
-\ ." Did 1 2 3 4 5 get printed?" cr
+: test 5 0 do i . cr 1 +loop ;
+test cr
+." Did 0 1 2 3 4 get printed?" cr
 
 reasonable-taste
+
+\ Start the REPL.
 ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

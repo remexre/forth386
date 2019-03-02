@@ -1,8 +1,5 @@
 bits 32
 
-extern forth_dictionary
-extern forth_heap
-extern forth_state
 extern forth_zero_equal
 extern halt
 extern heap_start
@@ -18,10 +15,6 @@ global ctrl_alt_delete
 
 ; Performs a cold start.
 cold:
-	mov dword [forth_dictionary], forth_zero_equal
-	mov dword [forth_heap], heap_start
-	mov dword [forth_state], 0
-
 	mov ecx, forth_std_len
 	mov edi, forth_std
 	call set_parse_buffer

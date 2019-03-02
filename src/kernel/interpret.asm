@@ -41,9 +41,8 @@ interpret:
 	dd .interpret_word
 	; 1 -> compile mode
 	dd .compile_word
-	; 2 -> comment mode
+	; 2, 3 -> comment mode
 	dd .comment_word
-	; 3 -> comment mode
 	dd .comment_word
 
 .interpret_word:

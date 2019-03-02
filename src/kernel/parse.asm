@@ -3,6 +3,8 @@ bits 32
 extern forth_base
 extern forth_to_in
 
+global input_buf
+global input_len
 global parse_string
 global set_parse_buffer
 
