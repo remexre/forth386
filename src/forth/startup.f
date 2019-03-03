@@ -96,8 +96,18 @@
 ." Finished startup.f!" cr
 
 reasonable-taste
-' spaces hd
-: x 0 spaces ." foo" ;
+
+: test-break 1000000 0 do break loop ;
+latest hd
+test-break
+
+: acpi-find-rsdp
+  0
+  $00100000 $000e0000 do
+  $20445352 i @ = if drop i break endif
+  $10 +loop ;
+
+." RSDP is at 0x" acpi-find-rsdp .nospace cr
 
 \ Start the REPL.
 ABORT
