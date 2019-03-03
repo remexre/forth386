@@ -39,7 +39,7 @@
   $c4 emit $c4 emit $c4 emit $c2 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $bf emit cr
-  $b3 emit space space space space space space space space $b3 emit
+  $b3 emit 8 spaces $b3 emit
   $10 0 do space space dup i + hd-write-nybble loop
   space $b3 emit space
   $10 0 do dup i + hd-write-nybble loop
@@ -98,38 +98,6 @@
 reasonable-taste
 
 : print-cpu-vendor 0 0 cpuid drop ascii. swap ascii. ascii. ;
-
-: acpi false ; \ This gets patched later on if loading ACPI was a success.
-: acpi-sum-area ( addr len -- u )
-  >r >r 0 r> r> over + swap do i c@ + loop $ff and ;
-: acpi-find-rsdp
-  0
-  $00100000 $000e0000 do
-  i @ $20445352 = if
-    i 4 + @ $20525450 = if
-      drop i
-      i 20 acpi-sum-area 0= unless ." RSDP failed checksum!" abort endif
-      break
-    endif
-  endif
-  $10 +loop
-  dup 0= if ." Couldn't find RSDP!" abort endif ;
-: acpi-rsdp [ acpi-find-rsdp ] literal ;
-' true cfa ' acpi #15 + ! \ Patch the acpi word to return true.
-
-: acpi-rsdt [ acpi-rsdp #16 + @ ] literal ;
-: acpi-table-length ( addr -- u ) 4 + @ ;
-: acpi-find-table ( table -- addr | 0 )
-  0 swap
-  acpi-rsdt acpi-table-length acpi-rsdt +
-  acpi-rsdt #36 +
-  do i @ dup @ ascii. space ." is at 0x" .nospace cr 4 +loop ;
-
-." RSDP is at 0x" acpi-rsdp .nospace cr
-." RSDT is at 0x" acpi-rsdt .nospace cr
-\ ." DSDT is at 0x" $54445344 acpi-find-table .nospace cr
-
-$54445344 acpi-find-table cr
 
 \ Start the REPL.
 ABORT
