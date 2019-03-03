@@ -97,17 +97,18 @@
 
 reasonable-taste
 
-: test-break 1000000 0 do break loop ;
+: test-break $ffffffff 0 do i . cr refresh int3 break loop ;
 latest hd
 test-break
+." Huh, weirdly quick for this to be broken..."
 
 : acpi-find-rsdp
   0
   $00100000 $000e0000 do
-  $20445352 i @ = if drop i break endif
+  i @ $20445352 = if drop i .s break ." after" .s endif
   $10 +loop ;
 
-." RSDP is at 0x" acpi-find-rsdp .nospace cr
+\ ." RSDP is at 0x" acpi-find-rsdp . cr
 
 \ Start the REPL.
 ABORT

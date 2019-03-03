@@ -47,7 +47,7 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
   IF 2DROP SWAP-STACKS 4 + SWAP-STACKS
   ELSE >R >R SWAP-STACKS ROT SWAP-STACKS R> @ 4 + >R
   ENDIF ;
-: [BREAK] R> @ @ INT3 UNSAFE-GOTO ;
+: [BREAK] R> @ @ R> R> 2DROP UNSAFE-GOTO ;
 
 : DO [COMPILE] [DO] HERE 0 , ; IMMEDIATE
 : ?DO [COMPILE] [?DO] HERE 0 , ; IMMEDIATE
@@ -71,7 +71,7 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
 : . ( X -- )
   \ TODO This is slower than it should be -- is it worth it to do bit-fuckery
   \ to optimize the division, and use a conditional jump instead of an IF?
-  [ $123456 #12 + @ ] literal w@
+  [ $123456 #12 + @ ] LITERAL W@
   #80 MOD IF SPACE ENDIF
   .NOSPACE ;
 : ." COMPILE S" STATE @ IF [COMPILE] TYPE ELSE TYPE ENDIF ; IMMEDIATE
