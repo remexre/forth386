@@ -97,18 +97,28 @@
 
 reasonable-taste
 
-: test-break $ffffffff 0 do i . cr refresh int3 break loop ;
-latest hd
-test-break
-." Huh, weirdly quick for this to be broken..."
-
+: acpi 0 ; \ TODO A patchable CONSTANT might be saner...
+: acpi-sum-area ( addr len -- u )
+  >r >r 0 r> r> over + swap do i c@ + loop $ff and ;
 : acpi-find-rsdp
   0
   $00100000 $000e0000 do
-  i @ $20445352 = if drop i .s break ." after" .s endif
-  $10 +loop ;
+  i @ $20445352 = if
+    i 4 + @ $20525450 = if
+      drop i
+      i 20 acpi-sum-area 0= unless ." RSDP failed checksum!" abort endif
+      break
+    endif
+  endif
+  $10 +loop
+  dup 0= if ." Couldn't find RSDP!" abort endif ;
+: acpi-rsdp [ acpi-find-rsdp ] literal ;
+: acpi-rsdt [ acpi-rsdp #16 + @ ] literal ;
+: acpi-find-table ( table -- addr | 0 ) begin ." foo!" crr again ;
 
-\ ." RSDP is at 0x" acpi-find-rsdp . cr
+." RSDP is at 0x" acpi-rsdp .nospace cr
+." RSDT is at 0x" acpi-rsdt .nospace cr
+." DSDT is at 0x" $54445344 acpi-find-table .nospace cr
 
 \ Start the REPL.
 ABORT

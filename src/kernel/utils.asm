@@ -118,9 +118,16 @@ is_number:
 	; Check for a leading `#`, `$`, or `%`.
 	mov al, [edi+edx]
 	cmp al, "#"
-	jb .loop
+	jb .minus
 	cmp al, "%"
-	ja .loop
+	ja .minus
+	inc edx
+
+	; Check for a leading `-`.
+.minus:
+	mov al, [edi+edx]
+	cmp al, '-'
+	jne .loop
 
 .loop_next:
 	inc edx
@@ -171,7 +178,14 @@ parse_number:
 	je .hex
 	cmp dl, "%"
 	je .binary
-	jmp .loop
+
+.minus:
+	mov dl, [edi]
+	cmp dl, '-'
+	mov byte [negative], 0
+	jne .loop
+	inc bx
+	mov byte [negative], 1
 
 .loop:
 	cmp ecx, ebx
@@ -198,21 +212,25 @@ parse_number:
 
 .done:
 	pop dword [forth_base]
+	mov dl, [negative]
+	test dl, dl
+	jz .early_done
+	neg eax
 .early_done:
 	ret
 
 .decimal:
 	mov dword [forth_base], 10
-	xor edx, edx
-	jmp .loop_next
+	inc ebx
+	jmp .minus
 .hex:
 	mov dword [forth_base], 16
-	xor edx, edx
-	jmp .loop_next
+	inc ebx
+	jmp .minus
 .binary:
 	mov dword [forth_base], 2
-	xor edx, edx
-	jmp .loop_next
+	inc ebx
+	jmp .minus
 
 ; A divide-by-zero error or a quotient out of bounds error.
 illegal_division:
@@ -313,5 +331,6 @@ word_not_found:
 stored_esi: resd 1
 stored_edi: resd 1
 stored_cl: resb 1
+negative: resb 1
 
 ; vi: cc=80 ft=nasm
