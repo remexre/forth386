@@ -97,7 +97,7 @@
 
 reasonable-taste
 
-: acpi 0 ; \ TODO A patchable CONSTANT might be saner...
+: acpi false ; \ This gets patched later on if loading ACPI was a success.
 : acpi-sum-area ( addr len -- u )
   >r >r 0 r> r> over + swap do i c@ + loop $ff and ;
 : acpi-find-rsdp
@@ -113,12 +113,14 @@ reasonable-taste
   $10 +loop
   dup 0= if ." Couldn't find RSDP!" abort endif ;
 : acpi-rsdp [ acpi-find-rsdp ] literal ;
+' true cfa ' acpi #15 + ! \ Patch the acpi word to return true.
+
 : acpi-rsdt [ acpi-rsdp #16 + @ ] literal ;
-: acpi-find-table ( table -- addr | 0 ) begin ." foo!" crr again ;
+\ : acpi-find-table ( table -- addr | 0 ) begin ." foo!" crr again ;
 
 ." RSDP is at 0x" acpi-rsdp .nospace cr
 ." RSDT is at 0x" acpi-rsdt .nospace cr
-." DSDT is at 0x" $54445344 acpi-find-table .nospace cr
+\ ." DSDT is at 0x" $54445344 acpi-find-table .nospace cr
 
 \ Start the REPL.
 ABORT
