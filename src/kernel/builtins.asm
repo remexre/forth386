@@ -20,7 +20,6 @@ extern ok
 extern parse_string
 extern read_to_quote
 extern underflow
-extern uninited_word
 extern word_not_found
 
 global forth_base
@@ -124,19 +123,8 @@ forth_char_store: ; ( char c-addr -- )
 	mov [ecx], al
 	NEXT
 
-forth_colon: ; ( C: "name" -- colon-sys )
-	dd forth_char_store
-	db 0x00, 1, ":"
-.cfa:
-	JMP_ENTER
-.pfa:
-	dd forth_create.cfa
-	dd forth_does_enter.cfa
-	dd forth_brack_right.cfa
-	dd forth_exit.cfa
-
 forth_comma: ; ( n -- )
-	dd forth_colon
+	dd forth_char_store
 	db 0x00, 1, ","
 .cfa:
 	FORTH_POP eax
@@ -185,7 +173,7 @@ forth_create: ; ( -- a-addr )
 	mov [edx], eax
 	mov [forth_dictionary], edx
 
-	mov byte [edx+4], 0x02
+	mov byte [edx+4], 0x00
 	mov [edx+5], cl
 	add edx, 6
 
@@ -196,7 +184,7 @@ forth_create: ; ( -- a-addr )
 	pop esi
 
 	mov byte [edi], 0xe9
-	mov ecx, uninited_word
+	mov ecx, forth_does_default_impl.cfa
 	sub ecx, edi
 	sub ecx, 5
 	mov [edi+1], ecx
@@ -254,8 +242,16 @@ forth_does_impl: ; ( -- )
 	sti
 	jmp $
 
-forth_dot_nospace: ; ( n -- )
+forth_does_default_impl:
 	dd forth_does_impl
+	db 0x00, 14, "[DOES>DEFAULT]"
+.cfa:
+	add eax, JMP_LEN
+	push eax
+	NEXT
+
+forth_dot_nospace: ; ( n -- )
+	dd forth_does_default_impl
 	db 0x00, 8, ".NOSPACE"
 .cfa:
 	FORTH_POP eax
@@ -578,8 +574,14 @@ forth_negate: ; ( x -- -x )
 	neg dword [esp]
 	NEXT
 
-forth_not: ; ( x -- ~x )
+forth_nop: ; ( -- )
 	dd forth_negate
+	db 0x00, 3, "NOP"
+.cfa:
+	NEXT
+
+forth_not: ; ( x -- ~x )
+	dd forth_nop
 	db 0x00, 3, "NOT"
 .cfa:
 	FORTH_POP_CHK 1
@@ -739,7 +741,7 @@ forth_recurse: ; ( -- )
 	xor ecx, ecx
 	mov eax, [forth_dictionary]
 	mov cl, [eax+5]
-	lea eax, [eax+ecx+6+JMP_ENTER_LEN]
+	lea eax, [eax+ecx+6+JMP_LEN]
 
 	mov edx, [forth_heap]
 	mov byte [edx+4], 0xbe
@@ -848,8 +850,23 @@ forth_semicolon: ; ( -- )
 .align_heap_done:
 	NEXT
 
-forth_state_word: ; ( -- a-addr )
+forth_set_dictionary: ; ( xt -- )
 	dd forth_semicolon
+	db 0x00, 14, "SET-DICTIONARY"
+.cfa:
+	FORTH_POP [forth_dictionary]
+	NEXT
+
+forth_smudge: ; ( -- )
+	dd forth_set_dictionary
+	db 0x00, 6, "SMUDGE"
+.cfa:
+	mov eax, [forth_dictionary]
+	or byte [eax+4], 0x02
+	NEXT
+
+forth_state_word: ; ( -- a-addr )
+	dd forth_smudge
 	db 0x00, 5, "STATE"
 .cfa:
 	push dword forth_state
@@ -953,8 +970,19 @@ forth_word: ; ( "name" -- c-addr u )
 	push ecx
 	NEXT
 
-forth_word_fetch: ; ( w-addr -- word )
+forth_word_comma: ; ( word -- )
 	dd forth_word
+	db 0x00, 2, "W,"
+.cfa:
+	FORTH_POP eax
+	mov edx, [forth_heap]
+	mov [edx], ax
+	add edx, 2
+	mov [forth_heap], edx
+	NEXT
+
+forth_word_fetch: ; ( w-addr -- word )
+	dd forth_word_comma
 	db 0x00, 2, "W@"
 .cfa:
 	FORTH_POP eax

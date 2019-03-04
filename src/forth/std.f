@@ -1,20 +1,17 @@
 \ The parts of the standard library that are implemented in Forth themselves.
 
-: NIP   ( X1 X2 -- X2          ) SWAP DROP      ;
-: OVER  ( X1 X2 -- X1 X2 X1    ) >R DUP R> SWAP ;
-: TUCK  ( X1 X2 -- X2 X1 X2    ) SWAP OVER      ;
-: 2DROP ( X1 X2 --             ) DROP DROP      ;
-: 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
-: 2R>   ( -- X1 X2 ) ( R: X1 X2 -- ) R> R> SWAP ;
-: 2>R   ( X1 X2 -- ) ( R: -- X1 X2 ) SWAP R> R> ;
-
-: */ ( a b c -- a*b/c ) */MOD NIP ;
-: /   ( a b -- a/b ) /MOD NIP ;
-: MOD ( a b -- a%b ) /MOD DROP ;
-: +! ( x addr -- ) DUP @ ROT + SWAP ! ;
-
 \ COMPILE must by CREATEd manually, since ' is an immediate word.
-CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
+CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ IMMEDIATE
+
+\ For Rule-Of-Cool, define function definition.
+CREATE : DOES>ENTER ] CREATE SMUDGE DOES>ENTER COMPILE ] EXIT [
+
+\ Anonymous word definition and function definition.
+: CREATE-NONAME
+  HERE LATEST , 0 W, $e9 C,
+  [ ' [DOES>DEFAULT] CFA ] LITERAL HERE 4 + - ,
+  SET-DICTIONARY INT3 ;
+CREATE :NONAME DOES>ENTER ] CREATE-NONAME DOES>ENTER COMPILE ] EXIT [
 
 \ Note that this is not at all related to the [COMPILE] in the Forth standard;
 \ this is instead a version of COMPILE that appends to the execution semantics
@@ -28,21 +25,42 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ UNSMUDGE IMMEDIATE
   [ ' , CFA ] LITERAL ,
   ; IMMEDIATE
 
+\ Some control-flow words.
+: NIP   ( X1 X2 -- X2          ) SWAP DROP      ;
+: OVER  ( X1 X2 -- X1 X2 X1    ) >R DUP R> SWAP ;
+: TUCK  ( X1 X2 -- X2 X1 X2    ) SWAP OVER      ;
+: 2DROP ( X1 X2 --             ) DROP DROP      ;
+: 2DUP  ( X1 X2 -- X1 X2 X1 X2 ) OVER OVER      ;
+: 2R>   ( -- X1 X2 ) ( R: X1 X2 -- ) R> R> R> ROT >R SWAP     ;
+: 2>R   ( X1 X2 -- ) ( R: -- X1 X2 ) R> ROT ROT SWAP >R >R >R ;
+
+\ And some math words.
+: */ ( a b c -- a*b/c ) */MOD NIP ;
+: /   ( a b -- a/b ) /MOD NIP ;
+: MOD ( a b -- a%b ) /MOD DROP ;
+: +! ( x addr -- ) DUP @ ROT + SWAP ! ;
+
+\ We keep track of the "if depth" to make BREAK sane to define. The if depth is
+\ basically how many words on the stack at compile-time are used for IF blocks.
 HERE 0 , : IF-DEPTH LITERAL ; \ TODO use a VARIABLE
 : SAVE-IF-DEPTH ( -- u ) IF-DEPTH @ 0 IF-DEPTH ! ;
 : RESTORE-IF-DEPTH ( u -- ) IF-DEPTH ! ;
 
+\ Define IF, UNLESS (i.e. NOT IF), ELSE, and ENDIF.
 : IF [COMPILE] [IF] HERE 0 , 1 IF-DEPTH +! ; IMMEDIATE
 : UNLESS [COMPILE] NOT [COMPILE] [IF] HERE 0 , 1 IF-DEPTH +! ; IMMEDIATE
 : ELSE [COMPILE] [ELSE] HERE 0 , SWAP HERE SWAP ! ; IMMEDIATE
 : ENDIF HERE SWAP ! -1 IF-DEPTH +! ; IMMEDIATE
 
+\ Define TRUE and FALSE.
 : TRUE $ffffffff ; \ TODO Use a CONSTANT
 : FALSE 0 ; \ TODO Use a CONSTANT
 
+\ TODO Support BREAK
 \ : BEGIN SAVE-IF-DEPTH HERE ; IMMEDIATE
 \ : AGAIN [COMPILE] [LITERAL] , [COMPILE] UNSAFE-GOTO RESTORE-IF-DEPTH ; IMMEDIATE
 
+\ The runtime implementation of DO blocks.
 : [DO] ( limit first -- ) ( R: -- i limit )
   SWAP-STACKS R> R> ROT 4 + SWAP-STACKS ;
 : [?DO] ( limit first -- ) ( R: -- i limit )
@@ -58,6 +76,8 @@ HERE 0 , : IF-DEPTH LITERAL ; \ TODO use a VARIABLE
   ENDIF ;
 : [BREAK] R> @ @ R> R> 2DROP UNSAFE-GOTO ;
 
+\ The compile-time DO, ?DO (DO with a first==limit check), LOOP, and +LOOP
+\ (LOOP with a variable increment) words.
 : DO SAVE-IF-DEPTH [COMPILE] [DO] HERE 0 , ; IMMEDIATE
 : ?DO SAVE-IF-DEPTH [COMPILE] [?DO] HERE 0 , ; IMMEDIATE
 : LOOP
@@ -66,13 +86,14 @@ HERE 0 , : IF-DEPTH LITERAL ; \ TODO use a VARIABLE
 : +LOOP [COMPILE] [+LOOP] DUP , HERE SWAP ! RESTORE-IF-DEPTH ; IMMEDIATE
 : BREAK [COMPILE] [BREAK] IF-DEPTH @ PICK , ; IMMEDIATE
 
+\ Loop index variables.
 : I ( -- i ) ( R: i limit -- i limit )
   SWAP-STACKS 2 PICK >R SWAP-STACKS ;
 
-\ : DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
+: DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
 
-\ : CONSTANT CREATE , DOES> @ UNSMUDGE ;
-\ : VARIABLE CREATE 1 CELLS ALLOT UNSMUDGE ;
+\ : CONSTANT CREATE , DOES> @ ;
+\ : VARIABLE CREATE 1 CELLS ALLOT ;
 
 : CHAR WORD DROP c@ ;
 : BL $20 ; \ TODO $20 CONSTANT BL

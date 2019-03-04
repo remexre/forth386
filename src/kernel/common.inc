@@ -43,7 +43,7 @@
 %endmacro
 
 ; TODO: This implies that the jmp to enter must be of the 0xe9 variety.
-JMP_ENTER_LEN equ 5
+JMP_LEN equ 5
 
 %macro NEXT 0
 	lodsd

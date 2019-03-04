@@ -20,7 +20,6 @@ global panic
 global parse_number
 global read_to_quote
 global underflow
-global uninited_word
 global word_not_found
 
 %include "src/kernel/common.inc"
@@ -33,7 +32,7 @@ enter:
 	push esi
 	xchg ebp, esp
 	; Make IP point to the Parameter Field
-	lea esi, [eax+JMP_ENTER_LEN]
+	lea esi, [eax+JMP_LEN]
 	NEXT
 
 [section .text]
@@ -300,16 +299,6 @@ underflow:
 	call console_print_newline
 	jmp forth_quit.cfa
 .str: db "Stack underflow!"
-
-; The handler for an uninitialized word, i.e. one that doesn't have a code
-; field.
-uninited_word:
-	mov edi, .str
-	mov ecx, 19
-	call console_print_string
-	call console_print_newline
-	jmp forth_quit.cfa
-.str: db "Uninitialized word!"
 
 ; The word-not-found handler.
 word_not_found:

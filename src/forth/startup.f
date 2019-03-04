@@ -93,6 +93,18 @@
 \ Print the boot command line arguments.
 \ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
 
+: grub-mb-head [ $123456 #4 + @ ] literal ;
+: grub-tags-each ( xt -- ) \ The word should be ( tag-addr -- i*x )
+  grub-mb-head dup dup @ + swap #8 +
+  do
+    i swap dup >r execute r>
+    i #4 + @ 7 + 7 not and
+  +loop drop ;
+
+grub-mb-head hd
+:noname . crr ;
+\ latest grub-tags-each .s
+
 ." Finished startup.f!" cr
 
 reasonable-taste
