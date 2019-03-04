@@ -5,12 +5,18 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ IMMEDIATE
 
 \ For Rule-Of-Cool, define function definition.
 CREATE : DOES>ENTER ] CREATE SMUDGE DOES>ENTER COMPILE ] EXIT [
+CREATE ; DOES>ENTER
+  ' [LITERAL] CFA ,
+  ' EXIT CFA ,
+  ' , CFA ,
+  ' [ CFA ,
+  ] UNSMUDGE 4 ALIGN EXIT [ IMMEDIATE
 
 \ Anonymous word definition and function definition.
 : CREATE-NONAME
   HERE LATEST , 0 W, $e9 C,
   [ ' [DOES>DEFAULT] CFA ] LITERAL HERE 4 + - ,
-  SET-DICTIONARY INT3 ;
+  SET-DICTIONARY HERE ;
 CREATE :NONAME DOES>ENTER ] CREATE-NONAME DOES>ENTER COMPILE ] EXIT [
 
 \ Note that this is not at all related to the [COMPILE] in the Forth standard;

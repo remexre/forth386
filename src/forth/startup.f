@@ -103,13 +103,13 @@
 
 grub-mb-head hd
 :noname . crr ;
-\ latest grub-tags-each .s
+latest grub-tags-each
 
 ." Finished startup.f!" cr
 
 reasonable-taste
 
-: print-cpu-vendor 0 0 cpuid drop ascii. swap ascii. ascii. ;
+\ : print-cpu-vendor 0 0 cpuid drop ascii. swap ascii. ascii. ;
 
 \ Start the REPL.
 ABORT

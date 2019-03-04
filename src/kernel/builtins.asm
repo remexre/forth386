@@ -42,8 +42,20 @@ forth_abort: ; ( i * x -- )
 	mov esp, [ipb.param_stack_top]
 	jmp forth_quit.cfa
 
-forth_allot : ; ( n -- )
+forth_align: ; ( u -- )
 	dd forth_abort
+	db 0x00, 5, "ALIGN"
+.cfa:
+	FORTH_POP ecx
+	mov eax, [forth_heap]
+	add eax, ecx
+	not ecx
+	and eax, ecx
+	mov [forth_heap], eax
+	NEXT
+
+forth_allot : ; ( n -- )
+	dd forth_align
 	db 0x00, 5, "ALLOT"
 .cfa:
 	FORTH_POP_CHK 2
@@ -823,35 +835,8 @@ forth_s_quote_impl: ; ( -- c-addr u )
 	add esi, ecx
 	NEXT
 
-forth_semicolon: ; ( -- )
-	dd forth_s_quote
-	db 0x01, 1, ";"
-.cfa:
-	JMP_ENTER
-.pfa:
-	dd .add_exit
-	dd forth_brack_left.cfa
-	dd forth_unsmudge.cfa
-	dd .align_heap
-	dd forth_exit.cfa
-.add_exit:
-	mov eax, [forth_heap]
-	mov dword [eax], forth_exit.cfa
-	add eax, 4
-	mov [forth_heap], eax
-	NEXT
-.align_heap:
-	mov eax, [forth_heap]
-	test al, 0x3
-	jz .align_heap_done
-	add eax, 0x04
-	and al, 0xfc
-	mov [forth_heap], eax
-.align_heap_done:
-	NEXT
-
 forth_set_dictionary: ; ( xt -- )
-	dd forth_semicolon
+	dd forth_s_quote
 	db 0x00, 14, "SET-DICTIONARY"
 .cfa:
 	FORTH_POP [forth_dictionary]
