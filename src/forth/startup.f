@@ -69,29 +69,7 @@
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $d9 emit crr ;
 
-\ : DOES> [ ' [DOES>] CFA ] LITERAL , ; IMMEDIATE
-\ : CONST CREATE , DOES> @ UNSMUDGE ;
-\ ' DOES> hd
-
-\ $123456 CONSTANT IPB
-\ ." IPB-CHECK" IPB @ $00425049 2DUP = . . . ;
-
-\ IPB 4 + @                 CONSTANT MB2-STRUCT
-\ MB2-STRUCT MB2-STRUCT @ + CONSTANT MB2-STRUCT-END
-
-\ : SEARCH-TAG ( tag-type addr -- addr )
-  \ 2DUP @ = IF
-    \ NIP
-  \ ELSE
-    \ DUP 4 + @ + RECURSE
-  \ ENDIF
-\ ;
-\ : FIND-TAG ( tag-type -- addr )
-  \ MB2-STRUCT 8 +
-\ ;
-
-\ Print the boot command line arguments.
-\ 1 FIND-TAG 8 + @ DUP STRLEN TYPE
+: print-cpu-vendor 0 0 cpuid drop ascii. swap ascii. ascii. ;
 
 : grub-mb-head [ $123456 #4 + @ ] literal ;
 : grub-tags-each ( xt -- ) \ The word should be ( tag-addr -- i*x )
@@ -101,15 +79,23 @@
     i #4 + @ 7 + 7 not and
   +loop drop ;
 
-grub-mb-head hd
-:noname . crr ;
+:noname dup @ 1 = if ." CL: " #8 + dup strlen 1- type crr else drop endif ;
 latest grub-tags-each
+
+:noname dup @ . . crr ;
+latest grub-tags-each
+
+: streq ( addr len addr len -- bool )
+  rot over =
+  if true swap 0 do loop rot rot 2drop
+  else drop drop drop false
+  endif ;
+
+s" foo" s" foo" .s streq .s
 
 ." Finished startup.f!" cr
 
 reasonable-taste
-
-\ : print-cpu-vendor 0 0 cpuid drop ascii. swap ascii. ascii. ;
 
 \ Start the REPL.
 ABORT

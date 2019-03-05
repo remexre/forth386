@@ -42,9 +42,9 @@ forth_abort: ; ( i * x -- )
 	mov esp, [ipb.param_stack_top]
 	jmp forth_quit.cfa
 
-forth_align: ; ( u -- )
+forth_align_heap: ; ( u -- )
 	dd forth_abort
-	db 0x00, 5, "ALIGN"
+	db 0x00, 10, "ALIGN-HEAP"
 .cfa:
 	FORTH_POP ecx
 	mov eax, [forth_heap]
@@ -55,7 +55,7 @@ forth_align: ; ( u -- )
 	NEXT
 
 forth_allot : ; ( n -- )
-	dd forth_align
+	dd forth_align_heap
 	db 0x00, 5, "ALLOT"
 .cfa:
 	FORTH_POP_CHK 2
@@ -614,8 +614,16 @@ forth_not_equal: ; ( x1 x2 -- flag )
 	mov [esp], edx
 	NEXT
 
-forth_one_plus: ; ( u -- u )
+forth_one_minus: ; ( u -- u )
 	dd forth_not_equal
+	db 0x00, 2, "1-"
+.cfa:
+	FORTH_POP_CHK 1
+	dec dword [esp]
+	NEXT
+
+forth_one_plus: ; ( u -- u )
+	dd forth_one_minus
 	db 0x00, 2, "1+"
 .cfa:
 	FORTH_POP_CHK 1

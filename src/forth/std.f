@@ -7,10 +7,10 @@ CREATE COMPILE DOES>ENTER ' ' CFA , ] CFA , EXIT [ IMMEDIATE
 CREATE : DOES>ENTER ] CREATE SMUDGE DOES>ENTER COMPILE ] EXIT [
 CREATE ; DOES>ENTER
   ' [LITERAL] CFA ,
-  ' EXIT CFA ,
-  ' , CFA ,
-  ' [ CFA ,
-  ] UNSMUDGE 4 ALIGN EXIT [ IMMEDIATE
+  ' EXIT      CFA ,
+  ' ,         CFA ,
+  ' [         CFA ,
+  ] UNSMUDGE 4 ALIGN-HEAP EXIT [ IMMEDIATE
 
 \ Anonymous word definition and function definition.
 : CREATE-NONAME
