@@ -8,6 +8,8 @@ extern console_read_line
 extern console_refresh
 extern cursor
 extern enter
+extern error_missing_name
+extern error_stack_underflow
 extern find
 extern heap_start
 extern input_buf
@@ -17,19 +19,18 @@ extern input_len
 extern interpret
 extern ipb.param_stack_top
 extern ipb.return_stack_top
-extern missing_name
 extern ok
+extern panic
 extern parse_string
 extern read_to_quote
-extern underflow
 extern word_not_found
 
 global forth_base
 global forth_dictionary
+global forth_error_handler
 global forth_exit.cfa
 global forth_heap
 global forth_literal_impl.cfa
-global forth_quit.cfa
 global forth_state
 global forth_to_in
 
@@ -37,15 +38,8 @@ global forth_to_in
 
 [section .forth]
 
-forth_abort: ; ( i * x -- )
-	dd 0
-	db 0x00, 5, "ABORT"
-.cfa:
-	mov esp, [ipb.param_stack_top]
-	jmp forth_quit.cfa
-
 forth_align_heap: ; ( u -- )
-	dd forth_abort
+	dd 0
 	db 0x00, 10, "ALIGN-HEAP"
 .cfa:
 	FORTH_POP ecx
@@ -178,7 +172,7 @@ forth_create: ; ( -- a-addr )
 	call parse_string
 	call capitalize
 	and ecx, 0xff ; This is a bit of a hack...
-	jz missing_name
+	jz error_missing_name
 
 	mov edx, [forth_heap]
 	add [forth_heap], ecx
@@ -215,8 +209,46 @@ forth_decimal: ; ( -- )
 	mov dword [forth_base], 10
 	NEXT
 
-forth_depth: ; ( -- u )
+forth_default_error_handler:
 	dd forth_decimal
+	db 0x00, 21, "DEFAULT-ERROR-HANDLER"
+.cfa:
+	FORTH_POP eax
+	neg eax
+	cmp eax, 3
+	jae .unknown_error
+	mov eax, [.jump_table+4*eax]
+	jmp eax
+.jump_table:
+	dd .illegal_division
+	dd .missing_name
+	dd .stack_underflow
+.illegal_division:
+	mov edi, .str_illegal_division
+	mov ecx, 17
+	jmp .print
+.missing_name:
+	mov edi, .str_missing_name
+	mov ecx, 13
+	jmp .print
+.stack_underflow:
+	mov edi, .str_stack_underflow
+	mov ecx, 16
+	jmp .print
+.unknown_error:
+	mov edi, .str_unknown_error
+	mov ecx, 14
+.print:
+	call console_print_string
+	call console_print_newline
+	jmp panic
+.str_illegal_division: db "Illegal division!"
+.str_missing_name: db "Missing name!"
+.str_stack_underflow: db "Stack underflow!"
+.str_unknown_error: db "Unknown error!"
+
+forth_depth: ; ( -- u )
+	dd forth_default_error_handler
 	db 0x00, 5, "DEPTH"
 .cfa:
 	mov eax, [ipb.param_stack_top]
@@ -501,7 +533,6 @@ forth_interpret: ; ( c-addr u -- i*x )
 .cfa:
 	FORTH_POP_CHK 2
 
-	int3
 	sub ebp, 16
 	mov eax, [input_buf]
 	mov [ebp], eax
@@ -521,7 +552,6 @@ forth_interpret: ; ( c-addr u -- i*x )
 	jmp interpret
 
 .after:
-	int3
 	mov eax, [ebp]
 	mov [input_buf], eax
 	mov eax, [ebp+4]
@@ -715,7 +745,7 @@ forth_pick: ; ( xu ... x0 u -- xu ... x0 xu )
 	shl edx, 2
 	sub ecx, edx
 	cmp esp, ecx
-	ja underflow
+	ja error_stack_underflow
 	mov edx, [esp+edx-4]
 	push edx
 	NEXT
@@ -729,46 +759,13 @@ forth_plus: ; ( a b -- a+b )
 	add [esp], eax
 	NEXT
 
-forth_quit: ; ( R: x* -- )
-	dd forth_plus
-	db 0x00, 4, "QUIT"
-.cfa:
-	mov ebp, [ipb.return_stack_top]
-	mov dword [forth_state], 0
-	call console_read_line
-	mov eax, .enter
-	jmp .enter
-.print_ok:
-	cmp byte [ok], 0
-	je .skip_ok
-	mov edx, 80
-	mov ax, [cursor]
-	div dl
-	test ah, ah
-	jz .skip_nl
-	call console_print_newline
-.skip_nl:
-	mov ecx, 3
-	mov edi, .ok
-	call console_print_string
-	call console_print_newline
-.skip_ok:
-	NEXT
-.ok: db " ok"
-.enter:
-	JMP_ENTER
-.pfa:
-	dd interpret
-	dd forth_quit.print_ok
-	dd forth_quit.cfa
-
 forth_quote: ; ( "name" -- xt )
-	dd forth_quit
+	dd forth_plus
 	db 0x00, 1, "'"
 .cfa:
 	call parse_string
 	test ecx, ecx
-	jz missing_name
+	jz error_missing_name
 	call capitalize
 	call find
 	test eax, eax
@@ -786,8 +783,17 @@ forth_rdtsc:
 	push eax
 	NEXT
 
-forth_recurse: ; ( -- )
+forth_read_line: ; ( -- addr len )
 	dd forth_rdtsc
+	db 0x00, 9, "READ-LINE"
+.cfa:
+	call console_read_line
+	push edi
+	push ecx
+	NEXT
+
+forth_recurse: ; ( -- )
+	dd forth_read_line
 	db 0x01, 7, "RECURSE"
 .cfa:
 	xor ecx, ecx
@@ -882,8 +888,15 @@ forth_set_dictionary: ; ( xt -- )
 	FORTH_POP [forth_dictionary]
 	NEXT
 
-forth_smudge: ; ( -- )
+forth_set_error_handler: ; ( addr -- )
 	dd forth_set_dictionary
+	db 0x00, 17, "SET-ERROR-HANDLER"
+.cfa:
+	FORTH_POP [forth_error_handler]
+	NEXT
+
+forth_smudge: ; ( -- )
+	dd forth_set_error_handler
 	db 0x00, 6, "SMUDGE"
 .cfa:
 	mov eax, [forth_dictionary]
@@ -976,8 +989,22 @@ forth_unsafe_goto: ; ( addr -- )
 	FORTH_POP esi
 	NEXT
 
-forth_unsmudge: ; ( -- )
+forth_unsafe_set_param_stack_ptr: ; ( addr -- )
 	dd forth_unsafe_goto
+	db 0x00, 26, "UNSAFE-SET-PARAM-STACK-PTR"
+.cfa:
+	FORTH_POP esp
+	NEXT
+
+forth_unsafe_set_return_stack_ptr: ; ( addr -- )
+	dd forth_unsafe_set_param_stack_ptr
+	db 0x00, 27, "UNSAFE-SET-RETURN-STACK-PTR"
+.cfa:
+	FORTH_POP ebp
+	NEXT
+
+forth_unsmudge: ; ( -- )
+	dd forth_unsafe_set_return_stack_ptr
 	db 0x00, 8, "UNSMUDGE"
 .cfa:
 	mov eax, [forth_dictionary]
@@ -990,7 +1017,7 @@ forth_word: ; ( "name" -- c-addr u )
 .cfa:
 	call parse_string
 	test ecx, ecx
-	jz missing_name
+	jz error_missing_name
 	push edi
 	push ecx
 	NEXT
@@ -1078,6 +1105,7 @@ forth_zero_equal: ; ( x -- flag )
 
 forth_base: dd 10
 forth_dictionary: dd forth_zero_equal
+forth_error_handler: dd forth_default_error_handler.cfa
 forth_heap: dd heap_start
 forth_state: dd 0
 forth_to_in: dd 0

@@ -31,11 +31,11 @@
 
 %macro FORTH_POP_CHK 1
 	extern ipb.param_stack_top
-	extern underflow
+	extern error_stack_underflow
 	mov eax, [ipb.param_stack_top]
 	sub eax, 4*%1
 	cmp esp, eax
-	ja underflow
+	ja error_stack_underflow
 %endmacro
 
 %macro JMP_ENTER 0

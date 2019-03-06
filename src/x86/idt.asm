@@ -1,7 +1,7 @@
 bits 32
 
+extern forth_error_handler
 extern halt
-extern illegal_division
 
 global idt
 global idt_init
@@ -79,8 +79,11 @@ idt_set:
 
 ; The Divide-By-Zero handler.
 de_handler:
-	add esp, 12
-	jmp illegal_division
+	add esp, 8
+	xor eax, eax
+	mov [esp], eax
+	mov eax, [forth_error_handler]
+	jmp eax
 
 ; The Non-Maskable Interrupt handler.
 nmi_handler:

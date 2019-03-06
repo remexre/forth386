@@ -89,7 +89,7 @@ latest grub-tags-each
 
 : streq ( addr len addr len -- bool )
   rot over =
-  if true swap 0 do ( todo ) loop rot rot 2drop
+  if true swap 0 do .s ( todo ) loop rot rot 2drop
   else drop drop drop false
   endif ;
 
@@ -98,6 +98,19 @@ latest grub-tags-each
 reasonable-taste
 
 \ Start the REPL.
-ABORT
+: quit
+  $123456 #28 + @ unsafe-set-return-stack-ptr \ Empty the return stack.
+  0 state ! \ Go into interpret mode.
+  \ Set the error handler to call quit again. (It doesn't actually get set
+  \ until later.)
+  compile [literal] [ here 0 , ] set-error-handler
+  read-line .s int3 interpret \ Interpret a line.
+  ." ok"
+  recurse ;
+:noname ." L" [ ' quit cfa ] literal unsafe-goto ;
+latest swap !
+' quit hd
+quit
+\ ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

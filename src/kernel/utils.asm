@@ -6,20 +6,21 @@ extern console_print_string
 extern console_refresh
 extern forth_base
 extern forth_dictionary
+extern forth_error_handler
 extern forth_quit.cfa
 extern parse_string
 
 global capitalize
 global contains
 global enter
+global error_missing_name
+global error_stack_underflow
 global find
 global illegal_division
 global is_number
-global missing_name
 global panic
 global parse_number
 global read_to_quote
-global underflow
 global word_not_found
 
 %include "src/kernel/common.inc"
@@ -58,6 +59,20 @@ capitalize:
 
 .done:
 	ret
+
+error_missing_name:
+	xor eax, eax
+	inc eax
+	push eax
+	mov eax, [forth_error_handler]
+	jmp eax
+
+error_stack_underflow:
+	xor eax, eax
+	add eax, 2
+	push eax
+	mov eax, [forth_error_handler]
+	jmp eax
 
 ; Finds the non-smudged word with the given name. The length of the string to
 ; find should be in ecx, and a pointer to its data should be in edi. Returns
@@ -230,24 +245,6 @@ parse_number:
 	inc ebx
 	jmp .minus
 
-; A divide-by-zero error or a quotient out of bounds error.
-illegal_division:
-	mov edi, .str
-	mov ecx, 17
-	call console_print_string
-	call console_print_newline
-	jmp forth_quit.cfa
-.str: db "Illegal division!"
-
-; The handler for a missing name.
-missing_name:
-	mov edi, .str
-	mov ecx, 13
-	call console_print_string
-	call console_print_newline
-	jmp forth_quit.cfa
-.str: db "Missing name!"
-
 ; The handler for something going very wrong.
 panic:
 	mov edi, .str
@@ -289,15 +286,6 @@ read_to_quote:
 	mov ecx, edx
 	sub ecx, edi
 	ret
-
-; The stack underflow handler.
-underflow:
-	mov edi, .str
-	mov ecx, 16
-	call console_print_string
-	call console_print_newline
-	jmp forth_quit.cfa
-.str: db "Stack underflow!"
 
 ; The word-not-found handler.
 word_not_found:

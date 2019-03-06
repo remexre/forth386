@@ -25,6 +25,7 @@ ASM_UNITS += x86/start
 
 FORTH_UNITS += acpi
 FORTH_UNITS += ata-pio
+FORTH_UNITS += gpt
 
 ASM_OBJS = $(patsubst %,tmp/%.o,$(ASM_UNITS))
 FORTH_SRCS = $(patsubst %,src/forth/%.f,$(FORTH_UNITS))
