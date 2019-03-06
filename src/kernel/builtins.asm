@@ -11,6 +11,8 @@ extern enter
 extern find
 extern heap_start
 extern input_buf
+extern input_buf
+extern input_buf
 extern input_len
 extern interpret
 extern ipb.param_stack_top
@@ -373,9 +375,8 @@ forth_exit: ; ( -- ) ( R: nest-sys -- )
 	db 0x00, 4, "EXIT"
 .cfa:
 	; Pop the previously pushed IP from the Return Stack
-	xchg ebp, esp
-	pop esi
-	xchg ebp, esp
+	mov esi, [ebp]
+	add ebp, 4
 	NEXT
 
 forth_false:
@@ -487,20 +488,51 @@ forth_ind: ; ( u -- u )
 	push eax
 	NEXT
 
-forth_int3: ; ( c-addr u -- )
+forth_int3: ; ( -- )
 	dd forth_ind
 	db 0x00, 4, "INT3"
 .cfa:
 	int3
 	NEXT
 
-forth_interpret: ; ( -- )
+forth_interpret: ; ( c-addr u -- i*x )
 	dd forth_int3
-	db 0x02, 9, "INTERPRET"
+	db 0x00, 9, "INTERPRET"
 .cfa:
+	FORTH_POP_CHK 2
+
+	int3
+	sub ebp, 16
+	mov eax, [input_buf]
+	mov [ebp], eax
+	mov eax, [input_len]
+	mov [ebp+4], eax
+	mov eax, [forth_to_in]
+	mov [ebp+8], eax
+	mov [ebp+12], esi
+
+	pop ecx
+	pop edi
+	mov [input_buf], edi
+	mov [input_len], ecx
+	mov dword [forth_to_in], 0
+
+	mov esi, .after
 	jmp interpret
 
-forth_invert: ; ( -- )
+.after:
+	int3
+	mov eax, [ebp]
+	mov [input_buf], eax
+	mov eax, [ebp+4]
+	mov [input_len], eax
+	mov eax, [ebp+8]
+	mov [forth_to_in], eax
+	mov esi, [ebp+12]
+	add ebp, 16
+	NEXT
+
+forth_invert: ; ( u -- u )
 	dd forth_interpret
 	db 0x00, 6, "INVERT"
 .cfa:
@@ -726,7 +758,7 @@ forth_quit: ; ( R: x* -- )
 .enter:
 	JMP_ENTER
 .pfa:
-	dd forth_interpret.cfa
+	dd interpret
 	dd forth_quit.print_ok
 	dd forth_quit.cfa
 

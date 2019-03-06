@@ -4,24 +4,30 @@ QEMUFLAGS += -accel kvm
 QEMUFLAGS += -debugcon stdio
 QEMUFLAGS += -m 64M
 
-UNITS += debug/debug_port
-UNITS += io/ascii
-UNITS += io/console_low
-UNITS += io/console_read
-UNITS += io/console_write
-UNITS += io/kbd
-UNITS += io/ps2
-UNITS += io/scancode_set_1
-UNITS += ipb
-UNITS += kernel/builtins
-UNITS += kernel/interpret
-UNITS += kernel/parse
-UNITS += kernel/startup
-UNITS += kernel/utils
-UNITS += x86/gdt
-UNITS += x86/idt
-UNITS += x86/multiboot2
-UNITS += x86/start
+ASM_UNITS += debug/debug_port
+ASM_UNITS += io/ascii
+ASM_UNITS += io/console_low
+ASM_UNITS += io/console_read
+ASM_UNITS += io/console_write
+ASM_UNITS += io/kbd
+ASM_UNITS += io/ps2
+ASM_UNITS += io/scancode_set_1
+ASM_UNITS += ipb
+ASM_UNITS += kernel/builtins
+ASM_UNITS += kernel/interpret
+ASM_UNITS += kernel/parse
+ASM_UNITS += kernel/startup
+ASM_UNITS += kernel/utils
+ASM_UNITS += x86/gdt
+ASM_UNITS += x86/idt
+ASM_UNITS += x86/multiboot2
+ASM_UNITS += x86/start
+
+FORTH_UNITS += acpi
+FORTH_UNITS += ata-pio
+
+ASM_OBJS = $(patsubst %,tmp/%.o,$(ASM_UNITS))
+FORTH_SRCS = $(patsubst %,src/forth/%.f,$(FORTH_UNITS))
 
 all: out/forth386.elf out/forth386.img
 clean:
@@ -44,11 +50,13 @@ watch:
 	watchexec -cre asm,cfg,inc,ld make
 .PHONY: all clean debug disas help run watch
 
-out/forth386.img: out/forth386.elf src/misc/grub.cfg
+out/forth386.img: out/forth386.elf src/misc/grub.cfg $(FORTH_SRCS)
 	@grub-file --is-x86-multiboot2 out/forth386.elf
 	@mkdir -p tmp/isodir/boot/grub
 	cp out/forth386.elf tmp/isodir/boot/forth386.elf
 	cp src/misc/grub.cfg tmp/isodir/boot/grub/grub.cfg
+	@mkdir -p tmp/isodir/boot/mods
+	cp $(FORTH_SRCS) tmp/isodir/boot/mods
 	@mkdir -p $(dir $@)
 	grub-mkrescue -o $@ tmp/isodir
 
@@ -59,7 +67,7 @@ out/forth386.elf out/forth386.sym: out/forth386-unstripped.elf
 	strip --only-keep-debug out/forth386.sym
 	strip out/forth386.elf
 
-out/forth386-unstripped.elf: src/misc/linker.ld $(patsubst %,tmp/%.o,$(UNITS))
+out/forth386-unstripped.elf: src/misc/linker.ld $(ASM_OBJS)
 	@mkdir -p $(dir $@)
 	ld -m elf_i386 -o $@ -T $^ -n -z max-page-size=0x1000
 

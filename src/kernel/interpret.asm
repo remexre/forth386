@@ -22,9 +22,8 @@ global ok
 
 ; Interprets the parse buffer, then jumps to the address in esi.
 interpret:
-	xchg ebp, esp
-	push esi
-	xchg ebp, esp
+	sub ebp, 4
+	mov [ebp], esi
 	mov byte [ok], 1
 .loop:
 	call parse_string
@@ -104,7 +103,9 @@ interpret:
 	jmp .loop
 
 .done:
-	jmp forth_exit.cfa
+	mov esi, [ebp]
+	add ebp, 4
+	jmp esi
 
 .word_not_found:
 	mov esi, .word_not_found_after_addr

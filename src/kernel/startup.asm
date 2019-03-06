@@ -20,7 +20,7 @@ cold:
 	mov ecx, forth_std_len
 	mov edi, forth_std
 	call set_parse_buffer
-	mov esi, .std_done_addr
+	mov esi, .std_done
 	jmp interpret
 
 .std_done:
@@ -31,7 +31,7 @@ cold:
 	mov ecx, startup_len
 	mov edi, forth_startup
 	call set_parse_buffer
-	mov esi, .startup_done_addr
+	mov esi, .startup_done
 	jmp interpret
 
 .startup_done:
@@ -42,9 +42,6 @@ cold:
 	mov edi, .str_startup_exited
 	jmp halt
 .str_startup_exited: db "src/forth/startup.f exited", 0
-
-.startup_done_addr: dd .startup_done
-.std_done_addr: dd .std_done
 
 ; The break handler.
 brk:

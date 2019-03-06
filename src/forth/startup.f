@@ -79,19 +79,19 @@
     i #4 + @ 7 + 7 not and
   +loop drop ;
 
-:noname dup @ 1 = if ." CL: " #8 + dup strlen 1- type crr else drop endif ;
-latest grub-tags-each
+." Executing modules..." crr
 
-:noname dup @ . . crr ;
+:noname dup @ 3 = if
+  ." Found module '" dup #16 + dup strlen 1- type ." '." crr
+  dup #8 + @ swap #12 + @ over - interpret
+  else drop endif ;
 latest grub-tags-each
 
 : streq ( addr len addr len -- bool )
   rot over =
-  if true swap 0 do loop rot rot 2drop
+  if true swap 0 do ( todo ) loop rot rot 2drop
   else drop drop drop false
   endif ;
-
-s" foo" s" foo" .s streq .s
 
 ." Finished startup.f!" cr
 

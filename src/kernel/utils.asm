@@ -28,9 +28,8 @@ global word_not_found
 
 enter:
 	; Push IP to the Return Stack
-	xchg ebp, esp
-	push esi
-	xchg ebp, esp
+	sub ebp, 4
+	mov [ebp], esi
 	; Make IP point to the Parameter Field
 	lea esi, [eax+JMP_LEN]
 	NEXT
