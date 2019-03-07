@@ -1,18 +1,13 @@
 bits 32
 
 extern capitalize
-extern console_print_newline
-extern console_print_string
-extern console_refresh
 extern find
-extern forth_exit.cfa
 extern forth_heap
 extern forth_literal_impl.cfa
 extern forth_state
 extern is_number
 extern parse_number
 extern parse_string
-extern set_parse_buffer
 extern word_not_found
 
 global interpret
