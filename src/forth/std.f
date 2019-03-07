@@ -116,6 +116,11 @@ HERE 0 , : ASCII.BUF LITERAL ; \ TODO use a VARIABLE
 
 : ." COMPILE S" STATE @ IF [COMPILE] TYPE ELSE TYPE ENDIF ; IMMEDIATE
 
+\ Base-setting words.
+: BINARY   #2 BASE ! ;
+: DECIMAL #10 BASE ! ;
+: HEX     #16 BASE ! ;
+
 \ Some more helpers.
 : CRR CR REFRESH ;
 : HALT HLT RECURSE ;

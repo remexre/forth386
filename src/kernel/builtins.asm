@@ -68,8 +68,16 @@ forth_and : ; ( x1 x2 -- x3 )
 	and [esp], eax
 	NEXT
 
-forth_brack_left: ; ( -- )
+forth_base_word: ; ( -- )
 	dd forth_and
+	db 0x00, 4, "BASE"
+.cfa:
+	mov eax, forth_base
+	push eax
+	NEXT
+
+forth_brack_left: ; ( -- )
+	dd forth_base_word
 	db 0x01, 1, "["
 .cfa:
 	mov dword [forth_state], 0
@@ -202,15 +210,8 @@ forth_create: ; ( -- a-addr )
 	push edi
 	NEXT
 
-forth_decimal: ; ( -- )
-	dd forth_create
-	db 0x00, 7, "DECIMAL"
-.cfa:
-	mov dword [forth_base], 10
-	NEXT
-
 forth_default_error_handler:
-	dd forth_decimal
+	dd forth_create
 	db 0x00, 21, "DEFAULT-ERROR-HANDLER"
 .cfa:
 	JMP_ENTER
@@ -472,15 +473,8 @@ forth_here: ; ( -- c-addr )
 	push eax
 	NEXT
 
-forth_hex: ; ( -- )
-	dd forth_here
-	db 0x00, 3, "HEX"
-.cfa:
-	mov dword [forth_base], 16
-	NEXT
-
 forth_hlt: ; ( -- )
-	dd forth_hex
+	dd forth_here
 	db 0x00, 3, "HLT"
 .cfa:
 	hlt
