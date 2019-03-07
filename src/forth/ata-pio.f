@@ -8,9 +8,7 @@
 
 \ Waits for the device to be ready.
 : ata-pio-wait-ready ( -- )
-  ata-pio-400ns-read $08 and
-  dup .
-  unless recurse endif ;
+  ata-pio-400ns-read $8 and 0= .s if recurse endif ;
 
 \ Reads a sector into &ata-pio-buf[512*i].
 : ata-pio-read-sector ( i -- )
@@ -34,6 +32,6 @@
 \ Reads a megabyte off the disk starting at the given LBA.
 : ata-pio-read ( lba-high-dword lba-low-dword -- )
   ata-pio-send-read-ext
-  $800 times .s ata-pio-wait-ready i ata-pio-read-sector loop ;
+  $800 times .s ata-pio-wait-ready .s i ata-pio-read-sector loop ;
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

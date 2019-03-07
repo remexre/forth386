@@ -52,7 +52,7 @@ install: out/forth386.elf $(FORTH_SRCS)
 	cp $(FORTH_SRCS) $(DESTDIR)/boot/mods/
 	cp out/forth386.elf $(DESTDIR)/boot/
 run: out/forth386.img
-	qemu-system-i386 -drive format=raw,file=out/forth386.img $(QEMUFLAGS)
+	qemu-system-i386 -drive format=raw,file=out/forth386.img,if=ide,media=disk $(QEMUFLAGS)
 watch:
 	watchexec -cre asm,cfg,inc,ld make
 .PHONY: all clean debug disas help install run watch
