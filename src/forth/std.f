@@ -22,7 +22,7 @@ CREATE :NONAME DOES>ENTER ] CREATE-NONAME DOES>ENTER COMPILE ] EXIT [
 \ Note that this is not at all related to the [COMPILE] in the Forth standard;
 \ this is instead a version of COMPILE that appends to the execution semantics
 \ of the word being defined the same semantics that would occur if COMPILE were
-\ to occur in an interpretive context. Treat the following as equivalent:
+\ to occur in an interpretive context. Basically, the following are equivalent:
 \ : FOO [ ' BAR CFA ] LITERAL , ;
 \ : FOO [COMPILE] BAR ;
 : [COMPILE]
@@ -63,8 +63,8 @@ HERE 0 , : IF-DEPTH LITERAL ; \ TODO use a VARIABLE
 : FALSE 0 ; \ TODO Use a CONSTANT
 
 \ TODO Support BREAK
-: BEGIN SAVE-IF-DEPTH HERE ; IMMEDIATE
-: AGAIN [COMPILE] [LITERAL] , [COMPILE] UNSAFE-GOTO RESTORE-IF-DEPTH ; IMMEDIATE
+\ : BEGIN SAVE-IF-DEPTH HERE ; IMMEDIATE
+\ : AGAIN [COMPILE] [LITERAL] , [COMPILE] UNSAFE-GOTO RESTORE-IF-DEPTH ; IMMEDIATE
 
 \ The runtime implementation of DO blocks.
 : [DO] ( limit first -- ) ( R: -- i limit )
@@ -86,6 +86,8 @@ HERE 0 , : IF-DEPTH LITERAL ; \ TODO use a VARIABLE
 \ (LOOP with a variable increment) words.
 : DO SAVE-IF-DEPTH [COMPILE] [DO] HERE 0 , ; IMMEDIATE
 : ?DO SAVE-IF-DEPTH [COMPILE] [?DO] HERE 0 , ; IMMEDIATE
+: TIMES [COMPILE] [LITERAL] 0 ,
+        SAVE-IF-DEPTH [COMPILE] [?DO] HERE 0 , ; IMMEDIATE
 : LOOP
   [COMPILE] [LITERAL] 1 , [COMPILE] [+LOOP]
   DUP , HERE SWAP ! RESTORE-IF-DEPTH ; IMMEDIATE
@@ -96,31 +98,54 @@ HERE 0 , : IF-DEPTH LITERAL ; \ TODO use a VARIABLE
 : I ( -- i ) ( R: i limit -- i limit )
   SWAP-STACKS 2 PICK >R SWAP-STACKS ;
 
-: DISCARD ( XU ... X0 U ) 0 ?DO DROP LOOP ;
-
-\ : CONSTANT CREATE , DOES> @ ;
-\ : VARIABLE CREATE 1 CELLS ALLOT ;
+: DISCARD ( XU ... X0 U ) TIMES DROP LOOP ;
 
 : CHAR WORD DROP c@ ;
 : BL $20 ; \ TODO $20 CONSTANT BL
 : QUOTE $22 EMIT ;
 : SPACE BL EMIT ;
-: SPACES 0 ?DO SPACE LOOP ;
+: SPACES TIMES SPACE LOOP ;
 
 HERE 0 , : ASCII.BUF LITERAL ; \ TODO use a VARIABLE
 : ASCII. ( X -- ) ASCII.BUF ! ASCII.BUF 4 TYPE ;
-: . ( X -- )
-  \ TODO This is slower than it should be -- is it worth it to do bit-fuckery
-  \ to optimize the division, and use a conditional jump instead of an IF?
-  [ $123456 #12 + @ ] LITERAL W@
-  #80 MOD IF SPACE ENDIF
-  .NOSPACE ;
+
+\ TODO This is slower than it should be -- is it worth it to do bit-fuckery
+\ to optimize the division?
+: CURSOR-AFTER-CR ( -- FLAG ) [ $123456 #12 + @ ] LITERAL W@ #80 MOD 0= ;
+: . ( X -- ) CURSOR-AFTER-CR UNLESS SPACE ENDIF .NOSPACE ;
+
 : ." COMPILE S" STATE @ IF [COMPILE] TYPE ELSE TYPE ENDIF ; IMMEDIATE
 
+\ Some more helpers.
 : CRR CR REFRESH ;
 : HALT HLT RECURSE ;
 : REBOOT ." Rebooting, please hold..." CRR $fe $64 OUTB HALT ;
-: TODO .S INT3 BEGIN HLT AGAIN ;
+: TODO .S INT3 HLT RECURSE ;
+
+\ Define the REPL.
+: QUIT
+  \ Empty the return stack.
+  [ $123456 #28 + ] LITERAL @ UNSAFE-SET-RETURN-STACK-PTR
+  \ Go into interpret mode.
+  0 STATE !
+  \ Set the error handler to call quit again. (It doesn't actually get set
+  \ until later.)
+  COMPILE [LITERAL] [ HERE 0 , ] SET-ERROR-HANDLER
+  \ Interpret a line.
+  READ-LINE INTERPRET
+  \ If we're not after a newline, add one.
+  CURSOR-AFTER-CR UNLESS CR ENDIF
+  \ If we're ok, print the "ok" message.
+  INTERPRET-OK IF ." ok" CRR ENDIF
+  \ Loop.
+  RECURSE ;
+\ This is the error handler we use.
+:NONAME GET-ERROR-MESSAGE TYPE CRR QUIT ;
+\ We set it in the above definition directly.
+LATEST CFA SWAP !
+
+\ We also define ABORT, which heavily leans on QUIT.
+: ABORT [ $123456 #24 + ] LITERAL @ UNSAFE-SET-PARAM-STACK-PTR QUIT ;
 
 HEX
 

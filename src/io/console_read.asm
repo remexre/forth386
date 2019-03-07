@@ -77,9 +77,11 @@ console_read_line:
 	mov word [console+80*24], 0x11
 	sub ecx, 80*24+2
 	mov edi, console+80*24+2
-	call set_parse_buffer
+	push ecx
 	call console_print_string
-	jmp console_print_newline
+	call console_print_newline
+	pop ecx
+	ret
 
 [section .bss]
 

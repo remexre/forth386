@@ -1,6 +1,6 @@
 : cls
   [ #80 #25 * ] literal
-  0 do 0 i [ $123456 #8 + @ ] literal + c! loop
+  times 0 i [ $123456 #8 + @ ] literal + c! loop
   0 [ $123456 #12 + @ ] literal w! refresh ;
 
 : set-color [ $123456 #16 + @ ] literal c! refresh ;
@@ -22,9 +22,9 @@
                  hd-write-byte ;
 : hd-write-row ( addr -- )
   $b3 emit dup hd-write-dword $b3 emit
-  $10 0 do space dup i + c@ hd-write-byte loop
+  $10 times space dup i + c@ hd-write-byte loop
   space $b3 emit space
-  $10 0 do dup i + c@ emit loop
+  $10 times dup i + c@ emit loop
   drop
   space $b3 emit cr ;
 : hd ( addr -- )
@@ -40,9 +40,9 @@
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $bf emit cr
   $b3 emit 8 spaces $b3 emit
-  $10 0 do space space dup i + hd-write-nybble loop
+  $10 times space space dup i + hd-write-nybble loop
   space $b3 emit space
-  $10 0 do dup i + hd-write-nybble loop
+  $10 times dup i + hd-write-nybble loop
   space $b3 emit cr
   \ And another byte array here...
   $c3 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
@@ -89,7 +89,7 @@ latest grub-tags-each
 
 : streq ( addr len addr len -- bool )
   rot over =
-  if true swap 0 do .s ( todo ) loop rot rot 2drop
+  if true swap times .s ( todo ) loop rot rot 2drop
   else drop drop drop false
   endif ;
 
@@ -98,19 +98,6 @@ latest grub-tags-each
 reasonable-taste
 
 \ Start the REPL.
-: quit
-  $123456 #28 + @ unsafe-set-return-stack-ptr \ Empty the return stack.
-  0 state ! \ Go into interpret mode.
-  \ Set the error handler to call quit again. (It doesn't actually get set
-  \ until later.)
-  compile [literal] [ here 0 , ] set-error-handler
-  read-line .s int3 interpret \ Interpret a line.
-  ." ok"
-  recurse ;
-:noname ." L" [ ' quit cfa ] literal unsafe-goto ;
-latest swap !
-' quit hd
-quit
-\ ABORT
+ABORT
 
 \ vim: set cc=80 ft=forth ss=2 sw=2 ts=2 et :

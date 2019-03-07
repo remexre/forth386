@@ -213,39 +213,13 @@ forth_default_error_handler:
 	dd forth_decimal
 	db 0x00, 21, "DEFAULT-ERROR-HANDLER"
 .cfa:
-	FORTH_POP eax
-	neg eax
-	cmp eax, 3
-	jae .unknown_error
-	mov eax, [.jump_table+4*eax]
-	jmp eax
-.jump_table:
-	dd .illegal_division
-	dd .missing_name
-	dd .stack_underflow
-.illegal_division:
-	mov edi, .str_illegal_division
-	mov ecx, 17
-	jmp .print
-.missing_name:
-	mov edi, .str_missing_name
-	mov ecx, 13
-	jmp .print
-.stack_underflow:
-	mov edi, .str_stack_underflow
-	mov ecx, 16
-	jmp .print
-.unknown_error:
-	mov edi, .str_unknown_error
-	mov ecx, 14
-.print:
-	call console_print_string
-	call console_print_newline
-	jmp panic
-.str_illegal_division: db "Illegal division!"
-.str_missing_name: db "Missing name!"
-.str_stack_underflow: db "Stack underflow!"
-.str_unknown_error: db "Unknown error!"
+	JMP_ENTER
+.pfa:
+	dd forth_get_error_message.cfa
+	dd forth_type.cfa
+	dd forth_cr.cfa
+	dd forth_refresh.cfa
+	dd panic
 
 forth_depth: ; ( -- u )
 	dd forth_default_error_handler
@@ -451,8 +425,47 @@ forth_from_r: ; ( -- x ) ( R: x -- )
 	push eax
 	NEXT
 
-forth_here: ; ( -- c-addr )
+forth_get_error_message:
 	dd forth_from_r
+	db 0x00, 17, "GET-ERROR-MESSAGE"
+.cfa:
+	; TODO: This should probably just look up the pointers and lengths instead
+	; of using a jump table... Don't care enough rn tho.
+	FORTH_POP_CHK 1
+	sub esp, 4
+	mov eax, [esp+4]
+	cmp eax, 3
+	jae .unknown_error
+	mov eax, [.jump_table+4*eax]
+	jmp eax
+.jump_table:
+	dd .illegal_division
+	dd .missing_name
+	dd .stack_underflow
+.illegal_division:
+	mov dword [esp+4], .str_illegal_division
+	mov dword [esp], 17
+	NEXT
+.missing_name:
+	mov dword [esp+4], .str_missing_name
+	mov dword [esp], 13
+	NEXT
+.stack_underflow:
+	mov dword [esp+4], .str_stack_underflow
+	mov dword [esp], 16
+	NEXT
+.unknown_error:
+	mov dword [esp+4], .str_unknown_error
+	mov dword [esp], 14
+	NEXT
+.str_illegal_division: db "Illegal division!"
+.str_missing_name: db "Missing name!"
+.str_stack_underflow: db "Stack underflow!"
+.str_unknown_error: db "Unknown error!"
+
+
+forth_here: ; ( -- c-addr )
+	dd forth_get_error_message
 	db 0x00, 4, "HERE"
 .cfa:
 	mov eax, [forth_heap]
@@ -562,8 +575,20 @@ forth_interpret: ; ( c-addr u -- i*x )
 	add ebp, 16
 	NEXT
 
-forth_invert: ; ( u -- u )
+forth_interpret_ok: ; ( -- flag )
 	dd forth_interpret
+	db 0x00, 12, "INTERPRET-OK"
+.cfa:
+	xor eax, eax
+	mov al, [ok]
+	test al, al
+	sete al
+	dec eax
+	push eax
+	NEXT
+
+forth_invert: ; ( u -- u )
+	dd forth_interpret_ok
 	db 0x00, 6, "INVERT"
 .cfa:
 	FORTH_POP_CHK 1
@@ -1105,7 +1130,9 @@ forth_zero_equal: ; ( x -- flag )
 
 forth_base: dd 10
 forth_dictionary: dd forth_zero_equal
-forth_error_handler: dd forth_default_error_handler.cfa
+forth_error_handler:
+	dd forth_default_error_handler.cfa
+	dd panic
 forth_heap: dd heap_start
 forth_state: dd 0
 forth_to_in: dd 0
