@@ -1077,45 +1077,8 @@ forth_word_store: ; ( word w-addr -- )
 	mov [ecx], ax
 	NEXT
 
-forth_words: ; ( -- )
-	dd forth_word_store
-	db 0x00, 5, "WORDS"
-.cfa:
-	mov eax, forth_dictionary
-	xor edx, edx
-.loop:
-	mov eax, [eax]
-	test eax, eax
-	jz .end
-	test edx, edx
-	jz .skip_space
-	push eax
-	push edx
-	mov ecx, 1
-	mov edi, .pfa
-	call console_print_string
-	pop edx
-	pop eax
-.skip_space:
-	test byte [eax+4], 0x02
-	jnz .loop
-	xor ecx, ecx
-	mov cl, [eax+5]
-	lea edi, [eax+6]
-	push eax
-	push edx
-	call console_print_string
-	pop edx
-	pop eax
-	inc edx
-	jmp .loop
-.end:
-	NEXT
-.pfa:
-	db ' '
-
 forth_zero_equal: ; ( x -- flag )
-	dd forth_words
+	dd forth_word_store
 	db 0x00, 2, "0="
 .cfa:
 	FORTH_POP eax

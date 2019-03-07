@@ -72,7 +72,7 @@
 : print-cpu-vendor 0 0 cpuid drop ascii. swap ascii. ascii. ;
 
 : grub-mb-head [ $123456 #4 + @ ] literal ;
-: grub-tags-each ( xt -- ) \ The word should be ( tag-addr -- i*x )
+: grub-tags-each ( xt -- i*j*x ) \ The word should be ( tag-addr -- i*x )
   grub-mb-head dup dup @ + swap #8 +
   do
     i swap dup >r execute r>
@@ -92,6 +92,15 @@ latest grub-tags-each
   if true swap times .s ( todo ) loop rot rot 2drop
   else drop drop drop false
   endif ;
+
+: words-each-helper ( xt addr -- i*j*x )
+  dup 0= unless 2dup 2>r swap execute 2r> @ recurse endif ;
+: words-each ( xt -- i*j*x) \ The word should be ( xt -- i*x )
+  latest words-each-helper 2drop ;
+:noname ( addr -- )
+  cursor-after-cr unless space endif
+  dup #6 + swap #5 + c@ type ;
+latest : words literal words-each ;
 
 ." Finished startup.f!" cr
 
