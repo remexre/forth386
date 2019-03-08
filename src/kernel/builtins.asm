@@ -1071,8 +1071,19 @@ forth_word_store: ; ( word w-addr -- )
 	mov [ecx], ax
 	NEXT
 
-forth_zero_equal: ; ( x -- flag )
+forth_zero: ; ( addr len -- )
 	dd forth_word_store
+	db 0x00, 5, "ZERO"
+.cfa:
+	FORTH_POP_CHK 2
+	pop ecx
+	pop edi
+	xor al, al
+	rep stosb
+	NEXT
+
+forth_zero_equal: ; ( x -- flag )
+	dd forth_zero
 	db 0x00, 2, "0="
 .cfa:
 	FORTH_POP eax
