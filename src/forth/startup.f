@@ -55,7 +55,7 @@
   $c4 emit $c4 emit $c4 emit $c5 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit
   $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $b4 emit cr
-  $80 0 do dup i + hd-write-row $10 +loop
+  $100 0 do dup i + hd-write-row $10 +loop
   drop
   \ More byte arrays being necessary...
   $c0 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit $c4 emit

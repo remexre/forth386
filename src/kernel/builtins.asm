@@ -1073,7 +1073,7 @@ forth_word_store: ; ( word w-addr -- )
 
 forth_zero: ; ( addr len -- )
 	dd forth_word_store
-	db 0x00, 5, "ZERO"
+	db 0x00, 4, "ZERO"
 .cfa:
 	FORTH_POP_CHK 2
 	pop ecx
