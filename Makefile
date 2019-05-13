@@ -1,3 +1,4 @@
+DESTDIR ?= /media/stahlos
 NASMFLAGS += -gdwarf
 QEMUFLAGS += -accel kvm
 # QEMUFLAGS += -d cpu_reset -d guest_errors -d int
@@ -51,11 +52,13 @@ install: out/forth386.elf $(FORTH_SRCS)
 	@mkdir -p $(DESTDIR)/boot/mods
 	cp $(FORTH_SRCS) $(DESTDIR)/boot/mods/
 	cp out/forth386.elf $(DESTDIR)/boot/
+install-grub-custom: src/misc/grub-custom.sh
+	ln -s $(realpath $<) /etc/grub.d/99_stahlos
 run: out/forth386.img
 	qemu-system-i386 -drive format=raw,file=out/forth386.img,if=ide,media=disk $(QEMUFLAGS)
 watch:
 	watchexec -cre asm,cfg,inc,ld make
-.PHONY: all clean debug disas help install run watch
+.PHONY: all clean debug disas help install install-grub-custom run watch
 
 out/forth386.img: out/forth386.elf src/misc/grub.cfg $(FORTH_SRCS)
 	@grub-file --is-x86-multiboot2 out/forth386.elf
